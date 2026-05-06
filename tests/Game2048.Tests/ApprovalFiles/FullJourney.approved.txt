@@ -1,0 +1,150 @@
+== new game ==
+board:
+  [   2 |    4 | . | .]
+  [. | . | . | .]
+  [. | . | . | .]
+  [. | . | . | .]
+score=0 win=False lose=False gameOver=False canMove=True canSaveRecord=False recordSaved=False
+overlay=False
+messages=<none>
+scoreText=Score: 0
+scoreTextDrawCount=16
+wallMessages=<none>
+playerPosition=1
+leaderboard:
+- <empty>
+== after left merge ==
+board:
+  [   4 |    2 | . | .]
+  [. | . | . | .]
+  [. | . | . | .]
+  [. | . | . | .]
+score=4 win=False lose=False gameOver=False canMove=True canSaveRecord=False recordSaved=False
+overlay=False
+messages=<none>
+scoreText=Score: 4
+scoreTextDrawCount=16
+wallMessages=<none>
+playerPosition=1
+leaderboard:
+- <empty>
+== after up merge ==
+board:
+  [   4 | . | . |    4]
+  [. | . | . | .]
+  [. | . | . | .]
+  [. | . | . | .]
+score=4 win=False lose=False gameOver=False canMove=True canSaveRecord=False recordSaved=False
+overlay=False
+messages=<none>
+scoreText=Score: 4
+scoreTextDrawCount=16
+wallMessages=<none>
+playerPosition=1
+leaderboard:
+- <empty>
+== after right merge ==
+board:
+  [. | . | . |    4]
+  [. | . | . | .]
+  [. | . | . | .]
+  [. | . | . |    2]
+score=4 win=False lose=False gameOver=False canMove=True canSaveRecord=False recordSaved=False
+overlay=False
+messages=<none>
+scoreText=Score: 4
+scoreTextDrawCount=16
+wallMessages=<none>
+playerPosition=1
+leaderboard:
+- <empty>
+== after down merge ==
+board:
+  [. | . | . | .]
+  [. | . | . | .]
+  [   2 | . | . | .]
+  [   4 | . | . | .]
+score=4 win=False lose=False gameOver=False canMove=True canSaveRecord=False recordSaved=False
+overlay=False
+messages=<none>
+scoreText=Score: 4
+scoreTextDrawCount=16
+wallMessages=<none>
+playerPosition=1
+leaderboard:
+- <empty>
+== before left no-op ==
+board:
+  [   2 |    4 | . | .]
+  [   8 |   16 | . | .]
+  [  32 |   64 | . | .]
+  [ 128 |  256 | . | .]
+score=42 win=False lose=False gameOver=False canMove=True canSaveRecord=False recordSaved=False
+overlay=False
+messages=<none>
+scoreText=Score: 42
+scoreTextDrawCount=16
+wallMessages=<none>
+playerPosition=1
+leaderboard:
+- <empty>
+== after left no-op ==
+board:
+  [   2 |    4 | . | .]
+  [   8 |   16 | . | .]
+  [  32 |   64 | . | .]
+  [ 128 |  256 | . | .]
+score=42 win=False lose=False gameOver=False canMove=True canSaveRecord=False recordSaved=False
+overlay=False
+messages=<none>
+scoreText=Score: 42
+scoreTextDrawCount=16
+wallMessages=<none>
+playerPosition=1
+leaderboard:
+- <empty>
+== after lose via keyPressed ==
+board:
+  [   2 |    4 |    2 |    4]
+  [   4 |    2 |    4 |    2]
+  [   2 |    4 |    2 |    4]
+  [   4 |    2 |    4 |    2]
+score=42 win=False lose=True gameOver=True canMove=False canSaveRecord=True recordSaved=False
+overlay=True
+messages=Game over! | You lose! | Press ESC to play again | Game over! | You lose! | Press ESC to play again | Game over! | You lose! | Press ESC to play again | Game over! | You lose! | Press ESC to play again | Game over! | You lose! | Press ESC to play again | Game over! | You lose! | Press ESC to play again | Game over! | You lose! | Press ESC to play again | Game over! | You lose! | Press ESC to play again | Game over! | You lose! | Press ESC to play again | Game over! | You lose! | Press ESC to play again | Game over! | You lose! | Press ESC to play again | Game over! | You lose! | Press ESC to play again | Game over! | You lose! | Press ESC to play again | Game over! | You lose! | Press ESC to play again | Game over! | You lose! | Press ESC to play again | Game over! | You lose! | Press ESC to play again
+scoreText=Score: 42
+scoreTextDrawCount=16
+wallMessages=<none>
+playerPosition=1
+leaderboard:
+- <empty>
+== after saving leaderboard ==
+board:
+  [   2 |    4 |    2 |    4]
+  [   4 |    2 |    4 |    2]
+  [   2 |    4 |    2 |    4]
+  [   4 |    2 |    4 |    2]
+score=42 win=False lose=True gameOver=True canMove=False canSaveRecord=False recordSaved=True
+overlay=True
+messages=Game over! | You lose! | Press ESC to play again | Game over! | You lose! | Press ESC to play again | Game over! | You lose! | Press ESC to play again | Game over! | You lose! | Press ESC to play again | Game over! | You lose! | Press ESC to play again | Game over! | You lose! | Press ESC to play again | Game over! | You lose! | Press ESC to play again | Game over! | You lose! | Press ESC to play again | Game over! | You lose! | Press ESC to play again | Game over! | You lose! | Press ESC to play again | Game over! | You lose! | Press ESC to play again | Game over! | You lose! | Press ESC to play again | Game over! | You lose! | Press ESC to play again | Game over! | You lose! | Press ESC to play again | Game over! | You lose! | Press ESC to play again | Game over! | You lose! | Press ESC to play again
+scoreText=Score: 42
+scoreTextDrawCount=16
+wallMessages=Alice scored 42 points in LEGACY 2048!
+playerPosition=1
+leaderboard:
+- #1 Alice => 42
+== after escape reset ==
+board:
+  [   2 |    2 | . | .]
+  [. | . | . | .]
+  [. | . | . | .]
+  [. | . | . | .]
+score=0 win=False lose=False gameOver=False canMove=True canSaveRecord=False recordSaved=False
+overlay=False
+messages=<none>
+scoreText=Score: 0
+scoreTextDrawCount=16
+wallMessages=Alice scored 42 points in LEGACY 2048!
+playerPosition=1
+leaderboard:
+- #1 Alice => 42

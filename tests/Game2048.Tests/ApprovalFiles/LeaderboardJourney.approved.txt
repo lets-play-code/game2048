@@ -1,0 +1,43 @@
+== after Alice 128 ==
+wallMessages:
+- Alice scored 128 points in LEGACY 2048!
+leaderboard:
+- #1 Alice => 128
+== after Alice 256 ==
+wallMessages:
+- Alice scored 128 points in LEGACY 2048!
+- Alice scored 256 points in LEGACY 2048!
+leaderboard:
+- #1 Alice => 256
+== after Alice 64 ==
+wallMessages:
+- Alice scored 128 points in LEGACY 2048!
+- Alice scored 256 points in LEGACY 2048!
+- Alice scored 64 points in LEGACY 2048!
+leaderboard:
+- #1 Alice => 256
+== after Bob 256 ==
+wallMessages:
+- Alice scored 128 points in LEGACY 2048!
+- Alice scored 256 points in LEGACY 2048!
+- Alice scored 64 points in LEGACY 2048!
+- Bob scored 256 points in LEGACY 2048!
+leaderboard:
+- #1 Alice => 256
+- #1 Bob => 256
+== after Cara 128 ==
+wallMessages:
+- Alice scored 128 points in LEGACY 2048!
+- Alice scored 256 points in LEGACY 2048!
+- Alice scored 64 points in LEGACY 2048!
+- Bob scored 256 points in LEGACY 2048!
+- Cara scored 128 points in LEGACY 2048!
+leaderboard:
+- #1 Alice => 256
+- #1 Bob => 256
+- #3 Cara => 128
+== final positions ==
+- Alice: 1
+- Bob: 1
+- Cara: 3
+- Dana: 4

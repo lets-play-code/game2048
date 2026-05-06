@@ -1,0 +1,47 @@
+== before winning move ==
+board:
+  [1024 | 1024 | . | .]
+  [. | . | . | .]
+  [. | . | . | .]
+  [. | . | . | .]
+score=100 win=False lose=False gameOver=False canMove=True canSaveRecord=False recordSaved=False
+overlay=False
+messages=<none>
+scoreText=Score: 100
+scoreTextDrawCount=16
+wallMessages=<none>
+playerPosition=1
+leaderboard:
+- <empty>
+== after winning move ==
+board:
+  [2048 |    2 | . | .]
+  [. | . | . | .]
+  [. | . | . | .]
+  [. | . | . | .]
+score=2148 win=True lose=False gameOver=True canMove=True canSaveRecord=True recordSaved=False
+overlay=True
+messages=You won! | Press ESC to play again | You won! | Press ESC to play again | You won! | Press ESC to play again | You won! | Press ESC to play again | You won! | Press ESC to play again | You won! | Press ESC to play again | You won! | Press ESC to play again | You won! | Press ESC to play again | You won! | Press ESC to play again | You won! | Press ESC to play again | You won! | Press ESC to play again | You won! | Press ESC to play again | You won! | Press ESC to play again | You won! | Press ESC to play again | You won! | Press ESC to play again | You won! | Press ESC to play again
+scoreText=Score: 2148
+scoreTextDrawCount=16
+wallMessages=<none>
+playerPosition=1
+leaderboard:
+- <empty>
+== after first save ==
+board:
+  [2048 |    2 | . | .]
+  [. | . | . | .]
+  [. | . | . | .]
+  [. | . | . | .]
+score=2148 win=True lose=False gameOver=True canMove=True canSaveRecord=False recordSaved=True
+overlay=True
+messages=You won! | Press ESC to play again | You won! | Press ESC to play again | You won! | Press ESC to play again | You won! | Press ESC to play again | You won! | Press ESC to play again | You won! | Press ESC to play again | You won! | Press ESC to play again | You won! | Press ESC to play again | You won! | Press ESC to play again | You won! | Press ESC to play again | You won! | Press ESC to play again | You won! | Press ESC to play again | You won! | Press ESC to play again | You won! | Press ESC to play again | You won! | Press ESC to play again | You won! | Press ESC to play again
+scoreText=Score: 2148
+scoreTextDrawCount=16
+wallMessages=Winner scored 2148 points in LEGACY 2048!
+playerPosition=1
+leaderboard:
+- #1 Winner => 2148
+== second save attempt ==
+InvalidOperationException: This game's score has already been recorded.

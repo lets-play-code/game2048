@@ -4,9 +4,13 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>disable</Nullable>
     <IsPackable>false</IsPackable>
+    <Include>[Game2048.Game]*</Include>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="coverlet.msbuild" Version="6.0.2">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.7.2" />
     <PackageReference Include="xunit" Version="2.5.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3">
@@ -17,5 +21,15 @@
 
   <ItemGroup>
     <ProjectReference Include="../../src/Game2048.Game/Game2048.Game.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="ApprovalFiles/**/*.approved.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="ApprovalFiles\" />
   </ItemGroup>
 </Project>
