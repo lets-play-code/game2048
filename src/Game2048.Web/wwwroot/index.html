@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Game2048</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #faf8ef;
+      color: #776e65;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .page {
+      width: 360px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      gap: 12px;
+    }
+
+    h1,
+    h2 {
+      margin: 0;
+      line-height: 1;
+    }
+
+    h1 {
+      font-size: 54px;
+    }
+
+    h2 {
+      font-size: 30px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    button {
+      border: 0;
+      border-radius: 5px;
+      padding: 10px 14px;
+      color: #f9f6f2;
+      background: #8f7a66;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      border: 1px solid #d7cbbd;
+      border-radius: 5px;
+      padding: 10px 12px;
+      font-size: 14px;
+      color: #5f574f;
+      background: #fffef9;
+    }
+
+    .score {
+      margin: 0 0 12px;
+      text-align: right;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .board {
+      position: relative;
+      width: 336px;
+      height: 336px;
+      border-radius: 6px;
+      background: #bbada0;
+      user-select: none;
+      touch-action: none;
+    }
+
+    .tile {
+      position: absolute;
+      width: 64px;
+      height: 64px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      transition: transform 80ms ease-in-out;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      border-radius: 6px;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.65);
+      color: #4e8bca;
+      text-align: center;
+      font-size: 42px;
+      font-weight: bold;
+    }
+
+    .overlay small {
+      color: rgba(128, 128, 128, 0.9);
+      font-size: 16px;
+      font-weight: normal;
+    }
+
+    .record-panel,
+    .records-card {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.7);
+      box-shadow: 0 4px 14px rgba(119, 110, 101, 0.12);
+    }
+
+    .record-panel label {
+      display: block;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .record-form-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .record-form-row input {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .record-message {
+      min-height: 20px;
+      margin: 8px 0 0;
+      font-size: 14px;
+    }
+
+    .record-message.error {
+      color: #c0392b;
+    }
+
+    .record-message.success {
+      color: #2e7d32;
+    }
+
+    .help {
+      margin-top: 12px;
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    .records-help {
+      margin-top: 0;
+      margin-bottom: 12px;
+    }
+
+    .records-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fffef9;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .records-table th,
+    .records-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #efe2d1;
+      text-align: left;
+    }
+
+    .records-table thead {
+      background: #ede0c8;
+    }
+
+    .records-table tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: #9a8f84;
+    }
+
+    .keys {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .keys button:nth-child(1) {
+      grid-column: 2;
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section id="game-view">
+      <header>
+        <h1>2048</h1>
+        <div class="actions">
+          <button id="reset" type="button">New Game</button>
+          <button id="view-records" type="button">View Records</button>
+        </div>
+      </header>
+      <p id="score" class="score">Score: 0</p>
+      <section id="board" class="board" aria-label="2048 board">
+        <div id="overlay" class="overlay"></div>
+      </section>
+      <section id="save-record-panel" class="record-panel hidden" aria-live="polite">
+        <label for="player-name">Player Name</label>
+        <div class="record-form-row">
+          <input id="player-name" type="text" maxlength="24" placeholder="Enter your name" />
+          <button id="save-record" type="button">Save Record</button>
+        </div>
+        <p id="save-record-message" class="record-message"></p>
+      </section>
+      <div class="keys" aria-label="方向按钮">
+        <button data-direction="up" type="button">↑</button>
+        <button data-direction="left" type="button">←</button>
+        <button data-direction="down" type="button">↓</button>
+        <button data-direction="right" type="button">→</button>
+      </div>
+      <p class="help">使用方向键移动，按 ESC 或 New Game 重开。终局后可保存一次成绩，并通过 View Records 查看当前内存中的记录榜。</p>
+    </section>
+
+    <section id="records-view" class="records-card hidden">
+      <header>
+        <h2>Records</h2>
+        <button id="back-to-game" type="button">Back to Game</button>
+      </header>
+      <p class="help records-help">排行榜只保存在当前服务内存中，服务重启后会清空。</p>
+      <table class="records-table" aria-label="2048 leaderboard">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Player</th>
+            <th>Score</th>
+          </tr>
+        </thead>
+        <tbody id="records-body">
+          <tr>
+            <td colspan="3" class="empty-state">No records yet.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <script>
+    const gameView = document.getElementById('game-view');
+    const recordsView = document.getElementById('records-view');
+    const board = document.getElementById('board');
+    const overlay = document.getElementById('overlay');
+    const score = document.getElementById('score');
+    const reset = document.getElementById('reset');
+    const viewRecords = document.getElementById('view-records');
+    const backToGame = document.getElementById('back-to-game');
+    const saveRecordPanel = document.getElementById('save-record-panel');
+    const playerNameInput = document.getElementById('player-name');
+    const saveRecordButton = document.getElementById('save-record');
+    const saveRecordMessage = document.getElementById('save-record-message');
+    const recordsBody = document.getElementById('records-body');
+
+    let gameId = localStorage.getItem('game2048-game-id');
+    let currentState = null;
+    let saveFeedback = '';
+    let saveFeedbackIsError = false;
+
+    function setSaveFeedback(message, isError = false) {
+      saveFeedback = message;
+      saveFeedbackIsError = isError;
+      saveRecordMessage.textContent = message;
+      saveRecordMessage.className = 'record-message';
+      if (message) {
+        saveRecordMessage.classList.add(isError ? 'error' : 'success');
+      }
+    }
+
+    async function ensureGame() {
+      if (gameId) {
+        const existing = await fetch(`/api/games/${gameId}`);
+        if (existing.ok) {
+          render(await existing.json());
+          return;
+        }
+      }
+
+      const created = await fetch('/api/games', { method: 'POST' });
+      const payload = await created.json();
+      gameId = payload.id;
+      localStorage.setItem('game2048-game-id', gameId);
+      render(payload.state);
+    }
+
+    async function move(direction) {
+      if (!gameId || gameView.classList.contains('hidden')) return;
+      const response = await fetch(`/api/games/${gameId}/move`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ direction })
+      });
+      render(await response.json());
+    }
+
+    async function newGame() {
+      setSaveFeedback('');
+      playerNameInput.value = '';
+      if (!gameId) {
+        await ensureGame();
+        return;
+      }
+      const response = await fetch(`/api/games/${gameId}/reset`, { method: 'POST' });
+      render(await response.json());
+      showGameView();
+    }
+
+    async function saveRecord() {
+      if (!gameId || !currentState || !currentState.canSaveRecord) return;
+
+      saveRecordButton.disabled = true;
+      const response = await fetch(`/api/games/${gameId}/leaderboard`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ playerName: playerNameInput.value })
+      });
+
+      if (!response.ok) {
+        let errorMessage = 'Failed to save record.';
+        try {
+          const errorPayload = await response.json();
+          errorMessage = errorPayload.error || errorMessage;
+        } catch {
+        }
+        playerNameInput.disabled = false;
+        saveRecordButton.disabled = false;
+        setSaveFeedback(errorMessage, true);
+        return;
+      }
+
+      setSaveFeedback('Record saved.');
+      render(await response.json());
+    }
+
+    async function loadLeaderboard() {
+      const response = await fetch('/api/leaderboard');
+      if (!response.ok) {
+        renderLeaderboard([]);
+        return;
+      }
+      renderLeaderboard(await response.json());
+    }
+
+    function renderLeaderboard(entries) {
+      recordsBody.replaceChildren();
+      if (!entries.length) {
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.colSpan = 3;
+        cell.className = 'empty-state';
+        cell.textContent = 'No records yet.';
+        row.appendChild(cell);
+        recordsBody.appendChild(row);
+        return;
+      }
+
+      for (const entry of entries) {
+        const row = document.createElement('tr');
+        appendCell(row, entry.rank);
+        appendCell(row, entry.playerName);
+        appendCell(row, entry.score);
+        recordsBody.appendChild(row);
+      }
+    }
+
+    function appendCell(row, value) {
+      const cell = document.createElement('td');
+      cell.textContent = String(value);
+      row.appendChild(cell);
+    }
+
+    function showGameView() {
+      gameView.classList.remove('hidden');
+      recordsView.classList.add('hidden');
+    }
+
+    async function showRecordsView() {
+      recordsView.classList.remove('hidden');
+      gameView.classList.add('hidden');
+      await loadLeaderboard();
+    }
+
+    function render(state) {
+      currentState = state;
+      board.querySelectorAll('.tile').forEach(tile => tile.remove());
+      board.style.background = state.boardBackground;
+      score.textContent = state.scoreText;
+
+      for (const tile of state.tiles) {
+        const element = document.createElement('div');
+        element.className = 'tile';
+        element.textContent = tile.value;
+        element.style.left = `${tile.xOffset}px`;
+        element.style.top = `${tile.yOffset}px`;
+        element.style.background = tile.background;
+        element.style.color = tile.foreground;
+        element.style.fontFamily = tile.fontName;
+        element.style.fontSize = `${Math.max(tile.fontSize, 18)}px`;
+        board.insertBefore(element, overlay);
+      }
+
+      if (state.win || state.lose) {
+        const title = state.win ? 'You won!' : 'Game over!';
+        const second = state.lose ? '<div>You lose!</div>' : '';
+        overlay.innerHTML = `<div>${title}</div>${second}<small>Press ESC to play again</small>`;
+        overlay.style.display = 'flex';
+      } else {
+        overlay.innerHTML = '';
+        overlay.style.display = 'none';
+      }
+
+      renderSavePanel(state);
+    }
+
+    function renderSavePanel(state) {
+      if (!state.gameOver) {
+        saveRecordPanel.classList.add('hidden');
+        playerNameInput.disabled = true;
+        saveRecordButton.disabled = true;
+        playerNameInput.value = '';
+        setSaveFeedback('');
+        return;
+      }
+
+      saveRecordPanel.classList.remove('hidden');
+      playerNameInput.disabled = !state.canSaveRecord;
+      saveRecordButton.disabled = !state.canSaveRecord;
+
+      if (!saveFeedback) {
+        setSaveFeedback(state.recordSaved ? 'Record saved.' : 'Enter your name to save this score.');
+        return;
+      }
+
+      setSaveFeedback(saveFeedback, saveFeedbackIsError);
+    }
+
+    document.addEventListener('keydown', async event => {
+      if (gameView.classList.contains('hidden')) {
+        return;
+      }
+
+      const keys = {
+        ArrowLeft: 'left',
+        ArrowRight: 'right',
+        ArrowUp: 'up',
+        ArrowDown: 'down'
+      };
+
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        await newGame();
+        return;
+      }
+
+      const direction = keys[event.key];
+      if (direction) {
+        event.preventDefault();
+        await move(direction);
+      }
+    });
+
+    document.querySelectorAll('[data-direction]').forEach(button => {
+      button.addEventListener('click', () => move(button.dataset.direction));
+    });
+
+    playerNameInput.addEventListener('keydown', async event => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        await saveRecord();
+      }
+    });
+
+    reset.addEventListener('click', newGame);
+    viewRecords.addEventListener('click', showRecordsView);
+    backToGame.addEventListener('click', showGameView);
+    saveRecordButton.addEventListener('click', saveRecord);
+    ensureGame();
+  </script>
+</body>
+</html>

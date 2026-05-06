@@ -1,0 +1,64 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{6084339E-B1EC-42E3-9AF3-2F9413C9532C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Game2048.Game", "src\Game2048.Game\Game2048.Game.csproj", "{BB89C3D1-4BBF-403B-B56D-5728A1BD4982}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{AA8F2737-CE4D-451B-9C3B-D9AD013E9A2B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Game2048.Tests", "tests\Game2048.Tests\Game2048.Tests.csproj", "{0E7F660B-6138-4335-829D-9FAED7255A06}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Game2048.Web", "src\Game2048.Web\Game2048.Web.csproj", "{BE06A840-88BF-455C-A0C1-D93E1B04C03E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GildedRose.App", "src\GildedRose.App\GildedRose.App.csproj", "{0B8E3466-9DCB-4353-A0CC-B8D79641F707}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GildedRose.Web", "src\GildedRose.Web\GildedRose.Web.csproj", "{593D90A4-8E3B-45DC-BC77-A21787ED880B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GildedRose.Tests", "tests\GildedRose.Tests\GildedRose.Tests.csproj", "{C56DD81F-55CF-485A-951E-0EA780E56E19}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BB89C3D1-4BBF-403B-B56D-5728A1BD4982}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB89C3D1-4BBF-403B-B56D-5728A1BD4982}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB89C3D1-4BBF-403B-B56D-5728A1BD4982}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB89C3D1-4BBF-403B-B56D-5728A1BD4982}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0E7F660B-6138-4335-829D-9FAED7255A06}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E7F660B-6138-4335-829D-9FAED7255A06}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0E7F660B-6138-4335-829D-9FAED7255A06}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0E7F660B-6138-4335-829D-9FAED7255A06}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BE06A840-88BF-455C-A0C1-D93E1B04C03E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BE06A840-88BF-455C-A0C1-D93E1B04C03E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BE06A840-88BF-455C-A0C1-D93E1B04C03E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BE06A840-88BF-455C-A0C1-D93E1B04C03E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0B8E3466-9DCB-4353-A0CC-B8D79641F707}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0B8E3466-9DCB-4353-A0CC-B8D79641F707}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0B8E3466-9DCB-4353-A0CC-B8D79641F707}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0B8E3466-9DCB-4353-A0CC-B8D79641F707}.Release|Any CPU.Build.0 = Release|Any CPU
+		{593D90A4-8E3B-45DC-BC77-A21787ED880B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{593D90A4-8E3B-45DC-BC77-A21787ED880B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{593D90A4-8E3B-45DC-BC77-A21787ED880B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{593D90A4-8E3B-45DC-BC77-A21787ED880B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C56DD81F-55CF-485A-951E-0EA780E56E19}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C56DD81F-55CF-485A-951E-0EA780E56E19}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C56DD81F-55CF-485A-951E-0EA780E56E19}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C56DD81F-55CF-485A-951E-0EA780E56E19}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{BB89C3D1-4BBF-403B-B56D-5728A1BD4982} = {6084339E-B1EC-42E3-9AF3-2F9413C9532C}
+		{0E7F660B-6138-4335-829D-9FAED7255A06} = {AA8F2737-CE4D-451B-9C3B-D9AD013E9A2B}
+		{BE06A840-88BF-455C-A0C1-D93E1B04C03E} = {6084339E-B1EC-42E3-9AF3-2F9413C9532C}
+		{0B8E3466-9DCB-4353-A0CC-B8D79641F707} = {6084339E-B1EC-42E3-9AF3-2F9413C9532C}
+		{593D90A4-8E3B-45DC-BC77-A21787ED880B} = {6084339E-B1EC-42E3-9AF3-2F9413C9532C}
+		{C56DD81F-55CF-485A-951E-0EA780E56E19} = {AA8F2737-CE4D-451B-9C3B-D9AD013E9A2B}
+	EndGlobalSection
+EndGlobal
