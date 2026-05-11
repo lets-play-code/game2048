@@ -33,7 +33,8 @@
     }
 
     h1,
-    h2 {
+    h2,
+    h3 {
       margin: 0;
       line-height: 1;
     }
@@ -44,6 +45,11 @@
 
     h2 {
       font-size: 30px;
+    }
+
+    h3 {
+      font-size: 20px;
+      margin-bottom: 10px;
     }
 
     .actions {
@@ -131,7 +137,8 @@
     }
 
     .record-panel,
-    .records-card {
+    .records-card,
+    .saves-panel {
       margin-top: 12px;
       padding: 12px;
       border-radius: 8px;
@@ -168,6 +175,38 @@
 
     .record-message.success {
       color: #2e7d32;
+    }
+
+    .save-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .save-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 6px;
+      background: #fffef9;
+    }
+
+    .save-slot-label {
+      font-size: 15px;
+      font-weight: bold;
+    }
+
+    .save-summary {
+      margin-top: 4px;
+      color: #8b8177;
+      font-size: 13px;
+    }
+
+    .save-actions {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
     }
 
     .help {
@@ -243,13 +282,58 @@
         </div>
         <p id="save-record-message" class="record-message"></p>
       </section>
+      <section id="saves-panel" class="saves-panel" aria-live="polite">
+        <h3>Saves</h3>
+        <div class="save-list">
+          <div class="save-row" data-slot-row="auto">
+            <div>
+              <div class="save-slot-label">Auto</div>
+              <div class="save-summary" data-save-summary>Empty</div>
+            </div>
+            <div class="save-actions">
+              <button data-load-slot="auto" type="button">Load</button>
+            </div>
+          </div>
+          <div class="save-row" data-slot-row="slot1">
+            <div>
+              <div class="save-slot-label">Slot 1</div>
+              <div class="save-summary" data-save-summary>Empty</div>
+            </div>
+            <div class="save-actions">
+              <button data-save-slot="slot1" type="button">Save</button>
+              <button data-load-slot="slot1" type="button">Load</button>
+            </div>
+          </div>
+          <div class="save-row" data-slot-row="slot2">
+            <div>
+              <div class="save-slot-label">Slot 2</div>
+              <div class="save-summary" data-save-summary>Empty</div>
+            </div>
+            <div class="save-actions">
+              <button data-save-slot="slot2" type="button">Save</button>
+              <button data-load-slot="slot2" type="button">Load</button>
+            </div>
+          </div>
+          <div class="save-row" data-slot-row="slot3">
+            <div>
+              <div class="save-slot-label">Slot 3</div>
+              <div class="save-summary" data-save-summary>Empty</div>
+            </div>
+            <div class="save-actions">
+              <button data-save-slot="slot3" type="button">Save</button>
+              <button data-load-slot="slot3" type="button">Load</button>
+            </div>
+          </div>
+        </div>
+        <p id="save-slot-message" class="record-message"></p>
+      </section>
       <div class="keys" aria-label="方向按钮">
         <button data-direction="up" type="button">↑</button>
         <button data-direction="left" type="button">←</button>
         <button data-direction="down" type="button">↓</button>
         <button data-direction="right" type="button">→</button>
       </div>
-      <p class="help">使用方向键移动，按 ESC 或 New Game 重开。终局后可保存一次成绩，并通过 View Records 查看当前内存中的记录榜。</p>
+      <p class="help">使用方向键移动，按 ESC 或 New Game 重开。每次移动都会刷新 Auto 存档；Slot 1-3 可手动 Save / Load。</p>
     </section>
 
     <section id="records-view" class="records-card hidden">
@@ -257,7 +341,7 @@
         <h2>Records</h2>
         <button id="back-to-game" type="button">Back to Game</button>
       </header>
-      <p class="help records-help">排行榜只保存在当前服务内存中，服务重启后会清空。</p>
+      <p class="help records-help">排行榜保存在 SQLite 中；终局后保存成绩时仍会触发 legacy wall POST 副作用。</p>
       <table class="records-table" aria-label="2048 leaderboard">
         <thead>
           <tr>
@@ -288,12 +372,16 @@
     const playerNameInput = document.getElementById('player-name');
     const saveRecordButton = document.getElementById('save-record');
     const saveRecordMessage = document.getElementById('save-record-message');
+    const saveSlotMessage = document.getElementById('save-slot-message');
     const recordsBody = document.getElementById('records-body');
+    const saveSlotRows = Array.from(document.querySelectorAll('[data-slot-row]'));
 
     let gameId = localStorage.getItem('game2048-game-id');
     let currentState = null;
     let saveFeedback = '';
     let saveFeedbackIsError = false;
+    let saveSlotFeedback = '';
+    let saveSlotFeedbackIsError = false;
 
     function setSaveFeedback(message, isError = false) {
       saveFeedback = message;
@@ -305,11 +393,63 @@
       }
     }
 
+    function setSaveSlotFeedback(message, isError = false) {
+      saveSlotFeedback = message;
+      saveSlotFeedbackIsError = isError;
+      saveSlotMessage.textContent = message;
+      saveSlotMessage.className = 'record-message';
+      if (message) {
+        saveSlotMessage.classList.add(isError ? 'error' : 'success');
+      }
+    }
+
+    function formatSlotName(slotKey) {
+      if (slotKey === 'auto') return 'Auto';
+      if (slotKey === 'slot1') return 'Slot 1';
+      if (slotKey === 'slot2') return 'Slot 2';
+      if (slotKey === 'slot3') return 'Slot 3';
+      return slotKey;
+    }
+
+    function formatSaveSummary(summary) {
+      if (!summary || !summary.hasData) {
+        return 'Empty';
+      }
+
+      const parts = [];
+      if (summary.score != null) {
+        parts.push(`Score ${summary.score}`);
+      }
+      if (summary.savedAtUtc) {
+        parts.push(new Date(summary.savedAtUtc).toLocaleString());
+      }
+      return parts.join(' • ');
+    }
+
+    function renderSaveSummaries(summaries) {
+      const lookup = new Map((sums => sums.map(item => [item.slotKey, item]))(summaries || []));
+      saveSlotRows.forEach(row => {
+        const slotKey = row.dataset.slotRow;
+        const summary = lookup.get(slotKey) || { slotKey, hasData: false };
+        row.querySelector('[data-save-summary]').textContent = formatSaveSummary(summary);
+      });
+    }
+
+    async function loadSaveSummaries() {
+      const response = await fetch('/api/saves');
+      if (!response.ok) {
+        renderSaveSummaries([]);
+        return;
+      }
+      renderSaveSummaries(await response.json());
+    }
+
     async function ensureGame() {
       if (gameId) {
         const existing = await fetch(`/api/games/${gameId}`);
         if (existing.ok) {
           render(await existing.json());
+          await loadSaveSummaries();
           return;
         }
       }
@@ -319,6 +459,7 @@
       gameId = payload.id;
       localStorage.setItem('game2048-game-id', gameId);
       render(payload.state);
+      await loadSaveSummaries();
     }
 
     async function move(direction) {
@@ -329,6 +470,7 @@
         body: JSON.stringify({ direction })
       });
       render(await response.json());
+      await loadSaveSummaries();
     }
 
     async function newGame() {
@@ -341,6 +483,7 @@
       const response = await fetch(`/api/games/${gameId}/reset`, { method: 'POST' });
       render(await response.json());
       showGameView();
+      await loadSaveSummaries();
     }
 
     async function saveRecord() {
@@ -354,12 +497,7 @@
       });
 
       if (!response.ok) {
-        let errorMessage = 'Failed to save record.';
-        try {
-          const errorPayload = await response.json();
-          errorMessage = errorPayload.error || errorMessage;
-        } catch {
-        }
+        const errorMessage = await readErrorMessage(response, 'Failed to save record.');
         playerNameInput.disabled = false;
         saveRecordButton.disabled = false;
         setSaveFeedback(errorMessage, true);
@@ -368,6 +506,43 @@
 
       setSaveFeedback('Record saved.');
       render(await response.json());
+    }
+
+    async function saveToSlot(slotKey) {
+      if (!gameId) return;
+
+      const response = await fetch(`/api/games/${gameId}/save/${slotKey}`, { method: 'POST' });
+      if (!response.ok) {
+        setSaveSlotFeedback(await readErrorMessage(response, 'Failed to save game.'), true);
+        return;
+      }
+
+      render(await response.json());
+      await loadSaveSummaries();
+      setSaveSlotFeedback(`Saved to ${formatSlotName(slotKey)}.`);
+    }
+
+    async function loadFromSlot(slotKey) {
+      if (!gameId) return;
+
+      const response = await fetch(`/api/games/${gameId}/load/${slotKey}`, { method: 'POST' });
+      if (!response.ok) {
+        setSaveSlotFeedback(await readErrorMessage(response, `Failed to load ${formatSlotName(slotKey)}.`), true);
+        return;
+      }
+
+      render(await response.json());
+      await loadSaveSummaries();
+      setSaveSlotFeedback(`Loaded ${formatSlotName(slotKey)}.`);
+    }
+
+    async function readErrorMessage(response, fallback) {
+      try {
+        const errorPayload = await response.json();
+        return errorPayload.error || fallback;
+      } catch {
+        return fallback;
+      }
     }
 
     async function loadLeaderboard() {
@@ -499,6 +674,14 @@
 
     document.querySelectorAll('[data-direction]').forEach(button => {
       button.addEventListener('click', () => move(button.dataset.direction));
+    });
+
+    document.querySelectorAll('[data-save-slot]').forEach(button => {
+      button.addEventListener('click', () => saveToSlot(button.dataset.saveSlot));
+    });
+
+    document.querySelectorAll('[data-load-slot]').forEach(button => {
+      button.addEventListener('click', () => loadFromSlot(button.dataset.loadSlot));
     });
 
     playerNameInput.addEventListener('keydown', async event => {

@@ -75,13 +75,7 @@ cd course\testing_ai\legacy-2048-csharp
 dotnet test LegacyCode.sln
 ```
 
-注意：当前默认 `dotnet test` **可能再次失败**。虽然 `LeaderboardTest` 仍然保留为显式 `Skip` 的 legacy 痕迹，但并入 `Game2048` 的记录榜代码故意保留了原先的坏味道：保存成绩时会直接访问硬编码外部地址并要求返回成功。因此，部分 `Game2048Test` 也可能因为外部 HTTP 行为而失败。
-
-如果只想观察 2048 主测试中的这类异常，可以继续使用过滤：
-
-```bash
-dotnet test LegacyCode.sln --filter "FullyQualifiedName~Game2048Test"
-```
+说明：默认 `dotnet test LegacyCode.sln` 应通过。`tests/Game2048.Tests/Game2048LegacyBehaviorTest.cs` 保留了一组显式 `Skip` 的 legacy characterization fixtures，用于后续练习时复现那些“怪现象”，但不会阻塞主干测试。
 
 ### 运行 2048 游戏
 
@@ -111,7 +105,12 @@ http://localhost:5000
 ASPNETCORE_URLS=http://127.0.0.1:5099 dotnet run --project src/Game2048.Web
 ```
 
-方向键移动，`ESC` 或页面上的 `New Game` 重开。点击 `View Records` 可以查看当前内存中的 2048 记录榜；终局后可输入昵称并保存一次成绩。
+方向键移动，`ESC` 或页面上的 `New Game` 重开。2048 Web 启动时会自动创建并迁移 SQLite 数据库，默认文件路径为 `src/Game2048.Web/App_Data/game2048.db`。页面支持：
+
+- `View Records` 查看 SQLite 中持久化的排行榜。
+- 每次方向键操作后自动刷新 `Auto` 存档。
+- `Slot 1` / `Slot 2` / `Slot 3` 的手动 `Save` / `Load`。
+- 终局后输入昵称并保存一次成绩；保存成绩时仍会额外触发 legacy wall `POST` 副作用。
 
 ## Gilded Rose 模块
 
@@ -150,19 +149,20 @@ http://localhost:5000
 - 记录的是 2048 游戏成绩，而不是 poker 筹码。
 - 玩家在终局后手动输入昵称，再保存记录。
 - 每个昵称只保留个人最高分。
-- 排行榜只保存在进程内存中，服务重启后清空。
+- 排行榜持久化到 SQLite，服务重启后仍会保留。
+- 提供 1 个自动存档（`auto`）和 3 个手动槽位（`slot1` / `slot2` / `slot3`）。
 - `getPositionOfPlayer(playerName)` 仍保留按名次查询的能力。
 
 ### 当前实现特征
 
-- `Game2048` 同时负责棋盘逻辑、终局状态、记录保存和排名计算。
-- 记录榜是全局静态内存字典，不做数据库或文件持久化。
-- 同一局终局后只能保存一次，避免重复点击反复记分。
-- 保存成绩时还会直接 `POST http://7k7k6666.com/api/wall`，把外部 HTTP 依赖重新混进核心逻辑里；如果外部请求失败，接口和测试都可能异常。
-- Web 页面仍是单个 `index.html`，通过显示/隐藏切换游戏页和记录页。
+- `Game2048` 仍同时负责棋盘逻辑、终局状态、记录保存、SQLite 读写和存档恢复，继续保留 God Class / legacy 练习感。
+- SQLite schema 与 migrations 位于 `src/Game2048.Game`，Web 启动时自动执行迁移，不需要手工建库。
+- 同一局终局后只能保存一次成绩；但保存动作仍先写 SQLite，再 `POST http://7k7k6666.com/api/wall`，所以外部 wall 失败时仍可能留下“数据库已更新、当前局未标记已保存”的 legacy 现象。
+- Web 页面仍是单个 `index.html`，通过显示/隐藏切换游戏页和记录页，只额外扩展了 Save / Load 面板。
+- 项目刻意保留了若干异常 legacy 行为，供后续补测试、调试和重构练习；README 不剧透其具体根因。
 
 ### 测试说明
 
-- 真实可执行的记录榜行为测试已经并入 `tests/Game2048.Tests/Game2048Test.cs`。
-- `tests/Game2048.Tests/LeaderboardTest.cs` 仍保留，但只作为历史遗留痕迹，统一标记为 `Skip`。
-- 练习重点之一仍然是观察：排行榜职责被塞进核心游戏类后，又把外部 HTTP 副作用一起带回来了，导致测试和保存流程重新变得脆弱。
+- 排行榜、SQLite 持久化、全局存档、Auto Save 与 Web API 的主干测试位于 `tests/Game2048.Tests/`，默认应通过。
+- `tests/Game2048.Tests/Game2048LegacyBehaviorTest.cs` 保留为 `Skip` 的教学脚手架，用来提示仓库中存在一些故意保留的怪现象。
+- 练习重点之一仍然是观察：排行榜、存档、内存状态与外部 HTTP 副作用被一起塞进核心游戏类后，代码和行为会变得更加纠缠。

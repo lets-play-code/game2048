@@ -7,11 +7,18 @@ using Xunit;
 
 namespace Game2048.Tests;
 
-public class Game2048Test
+public class Game2048Test : IDisposable
 {
+    private readonly Game2048PersistenceScope persistenceScope = new Game2048PersistenceScope();
+
     public Game2048Test()
     {
-        ResetLeaderboardState();
+        persistenceScope.InitializeDatabase();
+    }
+
+    public void Dispose()
+    {
+        persistenceScope.Dispose();
     }
 
     [Fact]
@@ -126,31 +133,15 @@ public class Game2048Test
         Assert.Equal(4, GetPositionOfPlayer("Dana"));
     }
 
-    private static void ResetLeaderboardState()
-    {
-        IEnumerable<FieldInfo> fields = typeof(Game2048Class)
-            .GetFields(BindingFlags.Static | BindingFlags.NonPublic)
-            .Where(field => field.FieldType.IsGenericType)
-            .Where(field => field.FieldType.GetGenericTypeDefinition() == typeof(Dictionary<,>))
-            .Where(field => field.FieldType.GetGenericArguments()[0] == typeof(string))
-            .Where(field => field.FieldType.GetGenericArguments()[1] == typeof(int));
-
-        foreach (FieldInfo field in fields)
-        {
-            object value = field.GetValue(null);
-            value?.GetType().GetMethod("Clear", Type.EmptyTypes)?.Invoke(value, null);
-        }
-    }
-
     private static Game2048Class CreateFinishedGame(int score)
     {
         Game2048Class game2048 = new Game2048Class();
         SetTiles(game2048, new[]
         {
-            "2", "4", "2", "4",
-            "4", "2", "4", "2",
-            "2", "4", "2", "4",
-            "4", "2", "4", "2"
+            "2", "4", "8", "16",
+            "32", "64", "128", "256",
+            "4", "8", "16", "32",
+            "64", "128", "256", "512"
         });
         game2048.myScore = score;
         game2048.keyPressed("left");

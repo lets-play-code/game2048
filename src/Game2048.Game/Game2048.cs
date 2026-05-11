@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 
 namespace Game2048.Game;
 
@@ -17,10 +19,13 @@ public class Game2048
 
     private static readonly Random random = new Random();
     private static readonly object leaderboardLock = new object();
-    private static readonly Dictionary<string, int> leaderboardScoresByPlayer = new Dictionary<string, int>();
+    private static readonly object persistenceLock = new object();
+    private static readonly string[] saveSlotKeys = new[] { "auto", "slot1", "slot2", "slot3" };
+    private static string configuredDatabasePath;
 
     private Tile[] myTiles;
     private bool myScoreRecorded = false;
+    private bool myLeakedShouldAddTile = false;
     public bool myWin = false;
     public bool myLose = false;
     public int myScore = 0;
@@ -30,12 +35,32 @@ public class Game2048
         resetGame();
     }
 
+    public static void ConfigurePersistence(string databasePath)
+    {
+        if (string.IsNullOrWhiteSpace(databasePath))
+        {
+            throw new ArgumentException("Database path is required.", nameof(databasePath));
+        }
+
+        lock (persistenceLock)
+        {
+            configuredDatabasePath = Path.GetFullPath(databasePath);
+        }
+    }
+
+    public static void EnsureDatabaseReady()
+    {
+        using Game2048DbContext context = CreateDbContext();
+        context.Database.Migrate();
+    }
+
     public void resetGame()
     {
         myScore = 0;
         myWin = false;
         myLose = false;
         myScoreRecorded = false;
+        myLeakedShouldAddTile = false;
         myTiles = new Tile[PANEL_WIDTH * PANEL_HEIGHT];
         for (int i = 0; i < myTiles.Length; i++)
         {
@@ -47,15 +72,17 @@ public class Game2048
 
     public void left()
     {
-        bool needAddTile = false;
+        bool needAddTile = myLeakedShouldAddTile;
+        bool boardChanged = false;
         for (int i = 0; i < PANEL_HEIGHT; i++)
         {
             Tile[] line = getLine(i);
             Tile[] merged = mergeLine(moveLine(line));
             setLine(i, merged);
-            if (!needAddTile && !compare(line, merged))
+            if (!compare(line, merged))
             {
                 needAddTile = true;
+                boardChanged = true;
             }
         }
 
@@ -63,6 +90,8 @@ public class Game2048
         {
             addTile();
         }
+
+        myLeakedShouldAddTile = boardChanged;
     }
 
     public void right()
@@ -140,10 +169,25 @@ public class Game2048
 
         lock (leaderboardLock)
         {
-            if (!leaderboardScoresByPlayer.TryGetValue(playerNameToRecord, out int bestScore) || myScore > bestScore)
+            using Game2048DbContext context = CreateDbContext();
+            LeaderboardEntryEntity existingEntry = context.LeaderboardEntries
+                .SingleOrDefault(entry => entry.PlayerName == playerNameToRecord);
+            if (existingEntry == null)
             {
-                leaderboardScoresByPlayer[playerNameToRecord] = myScore;
+                context.LeaderboardEntries.Add(new LeaderboardEntryEntity
+                {
+                    PlayerName = playerNameToRecord,
+                    BestScore = myScore,
+                    UpdatedAtUtc = DateTime.UtcNow
+                });
             }
+            else if (myScore > existingEntry.BestScore)
+            {
+                existingEntry.BestScore = myScore;
+                existingEntry.UpdatedAtUtc = DateTime.UtcNow;
+            }
+
+            context.SaveChanges();
         }
 
         string message = playerNameToRecord + " scored " + myScore + " points in LEGACY 2048!";
@@ -173,11 +217,64 @@ public class Game2048
         return entry != null ? entry.Rank : entries.Count + 1;
     }
 
+    public void saveGame(string slotKey)
+    {
+        string normalizedSlotKey = normalizeSlotKey(slotKey);
+        using Game2048DbContext context = CreateDbContext();
+        SavedGameEntity savedGame = context.SavedGames.SingleOrDefault(item => item.SlotKey == normalizedSlotKey);
+        if (savedGame == null)
+        {
+            savedGame = new SavedGameEntity { SlotKey = normalizedSlotKey };
+            context.SavedGames.Add(savedGame);
+        }
+
+        savedGame.BoardJson = serializeBoard(myTiles);
+        savedGame.Score = myScore;
+        savedGame.Win = myWin;
+        savedGame.Lose = myLose;
+        savedGame.ScoreRecorded = myScoreRecorded;
+        savedGame.LeakedShouldAddTile = myLeakedShouldAddTile;
+        savedGame.SavedAtUtc = DateTime.UtcNow;
+        context.SaveChanges();
+    }
+
+    public void loadGame(string slotKey)
+    {
+        string normalizedSlotKey = normalizeSlotKey(slotKey);
+        using Game2048DbContext context = CreateDbContext();
+        SavedGameEntity savedGame = context.SavedGames
+            .AsNoTracking()
+            .SingleOrDefault(item => item.SlotKey == normalizedSlotKey);
+        if (savedGame == null)
+        {
+            throw new InvalidOperationException("Save slot is empty.");
+        }
+
+        applySavedGame(savedGame);
+    }
+
+    public static List<SaveGameSummary> getSaveSummaries()
+    {
+        using Game2048DbContext context = CreateDbContext();
+        List<SavedGameEntity> savedGames = context.SavedGames.AsNoTracking().ToList();
+        List<SaveGameSummary> summaries = new List<SaveGameSummary>(saveSlotKeys.Length);
+        foreach (string slotKey in saveSlotKeys)
+        {
+            SavedGameEntity savedGame = savedGames.SingleOrDefault(item => item.SlotKey == slotKey);
+            summaries.Add(buildSaveSummary(slotKey, savedGame));
+        }
+        return summaries;
+    }
+
     private static List<KeyValuePair<string, int>> getSortedLeaderboardScores()
     {
-        return leaderboardScoresByPlayer
-            .OrderByDescending(entry => entry.Value)
-            .ThenBy(entry => entry.Key, StringComparer.OrdinalIgnoreCase)
+        using Game2048DbContext context = CreateDbContext();
+        return context.LeaderboardEntries
+            .AsNoTracking()
+            .ToList()
+            .OrderByDescending(entry => entry.BestScore)
+            .ThenBy(entry => entry.PlayerName, StringComparer.OrdinalIgnoreCase)
+            .Select(entry => new KeyValuePair<string, int>(entry.PlayerName, entry.BestScore))
             .ToList();
     }
 
@@ -201,6 +298,85 @@ public class Game2048
         return entries;
     }
 
+    private void applySavedGame(SavedGameEntity savedGame)
+    {
+        string[] values = deserializeBoard(savedGame.BoardJson);
+        myTiles = values.Select(value => new Tile(value)).ToArray();
+        myScore = savedGame.Score;
+        myWin = savedGame.Win;
+        myLose = savedGame.Lose;
+        myScoreRecorded = savedGame.ScoreRecorded;
+        myLeakedShouldAddTile = savedGame.LeakedShouldAddTile;
+    }
+
+    private static SaveGameSummary buildSaveSummary(string slotKey, SavedGameEntity savedGame)
+    {
+        if (savedGame == null)
+        {
+            return new SaveGameSummary { SlotKey = slotKey, HasData = false };
+        }
+
+        return new SaveGameSummary
+        {
+            SlotKey = slotKey,
+            HasData = true,
+            Score = savedGame.Score,
+            SavedAtUtc = savedGame.SavedAtUtc
+        };
+    }
+
+    private static string normalizeSlotKey(string slotKey)
+    {
+        string normalizedSlotKey = slotKey ?? string.Empty;
+        if (!saveSlotKeys.Contains(normalizedSlotKey))
+        {
+            throw new ArgumentException("Unknown save slot.", nameof(slotKey));
+        }
+
+        return normalizedSlotKey;
+    }
+
+    private static string serializeBoard(Tile[] tiles)
+    {
+        return JsonSerializer.Serialize(tiles.Select(tile => tile.value).ToArray());
+    }
+
+    private static string[] deserializeBoard(string boardJson)
+    {
+        string[] values = JsonSerializer.Deserialize<string[]>(boardJson) ?? Array.Empty<string>();
+        if (values.Length != PANEL_WIDTH * PANEL_HEIGHT)
+        {
+            throw new InvalidOperationException("Saved board data is invalid.");
+        }
+
+        return values;
+    }
+
+    internal static string GetConfiguredDatabasePath()
+    {
+        lock (persistenceLock)
+        {
+            if (string.IsNullOrWhiteSpace(configuredDatabasePath))
+            {
+                configuredDatabasePath = Path.Combine(Directory.GetCurrentDirectory(), "App_Data", "game2048.db");
+            }
+
+            return configuredDatabasePath;
+        }
+    }
+
+    private static Game2048DbContext CreateDbContext()
+    {
+        string databasePath = GetConfiguredDatabasePath();
+        string databaseDirectory = Path.GetDirectoryName(databasePath);
+        if (!string.IsNullOrEmpty(databaseDirectory))
+        {
+            Directory.CreateDirectory(databaseDirectory);
+        }
+
+        return new Game2048DbContext();
+    }
+
     private Tile tileAt(int x, int y)
     {
         return myTiles[x + y * PANEL_WIDTH];
@@ -209,12 +385,44 @@ public class Game2048
     private void addTile()
     {
         List<Tile> list = availableSpace();
-        if (availableSpace().Count != 0)
+        if (list.Count == 0)
+        {
+            return;
+        }
+
+        Tile emptyTile;
+        if (list.Count > PANEL_WIDTH * 2)
         {
             int index = (int)(random.NextDouble() * list.Count) % list.Count;
-            Tile emptyTime = list[index];
-            emptyTime.value = new string[] { "2", "4" }[random.NextDouble() < 0.9 ? 0 : 1];
+            emptyTile = list[index];
         }
+        else
+        {
+            int spaceIndex = random.Next(list.Count + 1);
+            emptyTile = findTileForSpaceIndex(spaceIndex);
+        }
+
+        emptyTile.value = new string[] { "2", "4" }[random.NextDouble() < 0.9 ? 0 : 1];
+    }
+
+    private Tile findTileForSpaceIndex(int targetIndex)
+    {
+        Tile chosenTile = myTiles[myTiles.Length - 1];
+        int currentEmptyIndex = 0;
+        for (int i = 0; i < myTiles.Length; i++)
+        {
+            chosenTile = myTiles[i];
+            if (!myTiles[i].isEmpty())
+            {
+                continue;
+            }
+            if (currentEmptyIndex == targetIndex)
+            {
+                return myTiles[i];
+            }
+            currentEmptyIndex++;
+        }
+        return chosenTile;
     }
 
     private List<Tile> availableSpace()
@@ -241,16 +449,18 @@ public class Game2048
         {
             return true;
         }
-        for (int x = 0; x < PANEL_WIDTH; x++)
+        for (int i = 0; i < myTiles.Length - 1; i++)
         {
-            for (int y = 0; y < PANEL_HEIGHT; y++)
+            if (myTiles[i].Equals(myTiles[i + 1]))
             {
-                Tile t = tileAt(x, y);
-                if ((x < 3 && t.Equals(tileAt(x + 1, y)))
-                    || ((y < 3) && t.Equals(tileAt(x, y + 1))))
-                {
-                    return true;
-                }
+                return true;
+            }
+        }
+        for (int i = 0; i < myTiles.Length - PANEL_WIDTH; i++)
+        {
+            if (myTiles[i].Equals(myTiles[i + PANEL_WIDTH]))
+            {
+                return true;
             }
         }
         return false;
@@ -550,6 +760,14 @@ public class LeaderboardEntry
     public int Rank { get; set; }
     public string PlayerName { get; set; }
     public int Score { get; set; }
+}
+
+public class SaveGameSummary
+{
+    public string SlotKey { get; set; }
+    public bool HasData { get; set; }
+    public int? Score { get; set; }
+    public DateTime? SavedAtUtc { get; set; }
 }
 
 public class TileState
