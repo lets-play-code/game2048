@@ -118,6 +118,31 @@ public class Game2048WebTest
         Assert.Equal(savedState.Score, slot1.Score);
     }
 
+    [Fact]
+    public async Task test_seed_endpoint_creates_existing_game_for_get_endpoint()
+    {
+        using Game2048PersistenceScope scope = new Game2048PersistenceScope();
+        await using Game2048WebApplicationFactory factory = scope.CreateFactory();
+        using HttpClient client = factory.CreateClient();
+
+        HttpResponseMessage seedResponse = await client.PostAsJsonAsync("/api/test/games/seeded-existing-game", new
+        {
+            boardJson = "[\"2\",\"4\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"\",\"16\",\"\",\"\",\"\",\"\"]",
+            score = 32,
+            win = false,
+            lose = false,
+            scoreRecorded = false,
+            leakedShouldAddTile = false
+        });
+        seedResponse.EnsureSuccessStatusCode();
+
+        GameStateResponse state = await client.GetFromJsonAsync<GameStateResponse>("/api/games/seeded-existing-game");
+
+        Assert.NotNull(state);
+        Assert.Equal(32, state.Score);
+        Assert.Equal("2,4,.,.,.,.,.,.,.,.,.,16,.,.,.,.", GetBoardSignature(state));
+    }
+
     private static void AssertEmptySlot(SaveSummaryResponse slot, string slotKey)
     {
         Assert.Equal(slotKey, slot.SlotKey);

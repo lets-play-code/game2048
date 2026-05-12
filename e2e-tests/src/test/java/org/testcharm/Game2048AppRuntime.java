@@ -45,6 +45,7 @@ public class Game2048AppRuntime {
             processBuilder.redirectOutput(ProcessBuilder.Redirect.appendTo(logFile));
             processBuilder.environment().put("ASPNETCORE_URLS", getBaseUrl());
             processBuilder.environment().put("Game2048__DatabasePath", databasePath.toString());
+            processBuilder.environment().put("Game2048__EnableTestApi", "true");
             processBuilder.environment().put("Logging__LogLevel__Default", "Warning");
 
             System.out.println("[INFO] Starting Game2048 web app on " + getBaseUrl());
@@ -80,6 +81,10 @@ public class Game2048AppRuntime {
 
     public synchronized Path getDatabasePath() {
         return databasePath;
+    }
+
+    public synchronized boolean isRunning() {
+        return process != null && process.isAlive();
     }
 
     private int findAvailablePort() throws IOException {

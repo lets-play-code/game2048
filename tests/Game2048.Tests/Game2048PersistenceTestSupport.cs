@@ -83,7 +83,8 @@ internal sealed class Game2048WebApplicationFactory : WebApplicationFactory<Prog
         {
             configBuilder.AddInMemoryCollection(new Dictionary<string, string>
             {
-                ["Game2048:DatabasePath"] = databasePath
+                ["Game2048:DatabasePath"] = databasePath,
+                ["Game2048:EnableTestApi"] = "true"
             });
         });
     }

@@ -22,6 +22,7 @@ Game2048Model.EnsureDatabaseReady();
 
 var app = builder.Build();
 var games = new ConcurrentDictionary<string, Game2048Model>();
+bool enableTestApi = builder.Configuration.GetValue<bool>("Game2048:EnableTestApi");
 
 app.UseDefaultFiles();
 app.UseStaticFiles();
@@ -130,12 +131,50 @@ app.MapPost("/api/games/{id}/leaderboard", (string id, SaveLeaderboardRecordRequ
     }
 });
 
+if (enableTestApi)
+{
+    app.MapPost("/api/test/games/clear-cache", () =>
+    {
+        games.Clear();
+        return Results.NoContent();
+    });
+
+    app.MapPost("/api/test/games/{id}", (string id, SeedExistingGameRequest request) =>
+    {
+        try
+        {
+            Game2048Model game2048 = new Game2048Model();
+            lock (game2048)
+            {
+                game2048.restoreForTesting(
+                    request.BoardJson,
+                    request.Score,
+                    request.Win,
+                    request.Lose,
+                    request.ScoreRecorded,
+                    request.LeakedShouldAddTile);
+                games[id] = game2048;
+                return Results.NoContent();
+            }
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new ErrorResponse(ex.Message));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Results.BadRequest(new ErrorResponse(ex.Message));
+        }
+    });
+}
+
 app.MapFallbackToFile("index.html");
 
 app.Run();
 
 public record MoveRequest(string Direction);
 public record SaveLeaderboardRecordRequest(string PlayerName);
+public record SeedExistingGameRequest(string BoardJson, int Score, bool Win, bool Lose, bool ScoreRecorded, bool LeakedShouldAddTile);
 public record ErrorResponse(string Error);
 public record GameCreatedResponse(string Id, Game2048StateModel State);
 public partial class Program { }

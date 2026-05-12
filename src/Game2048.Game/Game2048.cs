@@ -253,6 +253,24 @@ public class Game2048
         applySavedGame(savedGame);
     }
 
+    public void restoreForTesting(string boardJson, int score, bool win, bool lose, bool scoreRecorded, bool leakedShouldAddTile)
+    {
+        if (string.IsNullOrWhiteSpace(boardJson))
+        {
+            throw new ArgumentException("Board data is required.", nameof(boardJson));
+        }
+
+        applySavedGame(new SavedGameEntity
+        {
+            BoardJson = boardJson,
+            Score = score,
+            Win = win,
+            Lose = lose,
+            ScoreRecorded = scoreRecorded,
+            LeakedShouldAddTile = leakedShouldAddTile
+        });
+    }
+
     public static List<SaveGameSummary> getSaveSummaries()
     {
         using Game2048DbContext context = CreateDbContext();
