@@ -42,16 +42,18 @@ ext {
 }
 
 dependencies {
-    testImplementation("org.springframework.boot:spring-boot-starter")
+    testImplementation("org.springframework.boot:spring-boot-starter-data-jpa")
     testImplementation('org.springframework.boot:spring-boot-starter-test')
     testImplementation("io.cucumber:cucumber-java:6.10.2")
     testImplementation("io.cucumber:cucumber-spring:6.10.2")
     testImplementation "com.github.leeonky:jfactory:${jfactoryDal}"
     testImplementation "com.github.leeonky:jfactory-cucumber:${jfactoryDal}"
+    testImplementation "com.github.leeonky:jfactory-repo-jpa:${jfactoryDal}"
     testImplementation "com.github.leeonky:RESTful-cucumber:${jfactoryDal}"
     testImplementation "com.github.leeonky:DAL-java:${jfactoryDal}"
     testImplementation "com.github.leeonky:DAL-extension-basic:${jfactoryDal}"
     testImplementation 'commons-fileupload:commons-fileupload:1.5'
+    testImplementation 'com.github.gwenn:sqlite-dialect:0.1.4'
     testImplementation 'org.xerial:sqlite-jdbc:3.46.1.3'
 }
 
@@ -64,6 +66,7 @@ task cucumber(type: JavaExec) {
     main = "io.cucumber.core.cli.Main"
     classpath = configurations.cucumberRuntime + sourceSets.main.output + sourceSets.test.output
     environment "SPRING_PROFILES_ACTIVE", "test"
+    environment "TESTCHARM_GAME2048_DATABASE_PATH", "${buildDir}/game2048-e2e-${UUID.randomUUID()}.db"
     jvmArgs "-Dfile.encoding=UTF-8", "-Dsun.jnu.encoding=utf-8"
     args = ['--plugin', 'pretty',
             '--glue', 'org.testcharm',

@@ -3,24 +3,39 @@ package org.testcharm;
 import com.github.leeonky.jfactory.CompositeDataRepository;
 import com.github.leeonky.jfactory.JFactory;
 import com.github.leeonky.jfactory.MemoryDataRepository;
+import com.github.leeonky.jfactory.repo.JPADataRepository;
 import org.testcharm.entity.LeaderboardEntryRow;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+
 @Configuration
 public class Factories {
-
     @Bean
-    public Game2048AppRuntime game2048AppRuntime(@Value("${testcharm.app.command:dotnet}") String dotnetCommand) {
-        return new Game2048AppRuntime(dotnetCommand);
+    public Game2048AppRuntime game2048AppRuntime(
+            @Value("${testcharm.app.command:dotnet}") String dotnetCommand,
+            @Value("${testcharm.game2048.database-path}") String databasePath) {
+        return new Game2048AppRuntime(dotnetCommand, databasePath);
     }
 
     @Bean
-    public JFactory factorySet(Game2048AppRuntime appRuntime) {
+    public EntityManager entityManager(EntityManagerFactory entityManagerFactory) {
+        return entityManagerFactory.createEntityManager();
+    }
+
+    @Bean
+    public JPADataRepository jpaDataRepository(EntityManager entityManager) {
+        return new JPADataRepository(entityManager);
+    }
+
+    @Bean
+    public JFactory factorySet(JPADataRepository jpaDataRepository) {
         return new EntityFactory(
                 new CompositeDataRepository(new MemoryDataRepository())
-                        .registerByType(LeaderboardEntryRow.class, new SQLiteLeaderboardDataRepository(appRuntime))
+                        .registerByType(LeaderboardEntryRow.class, jpaDataRepository)
         );
     }
 }

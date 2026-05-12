@@ -7,19 +7,17 @@ import java.net.ServerSocket;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Comparator;
-import java.util.stream.Stream;
 import java.util.concurrent.TimeUnit;
 
 public class Game2048AppRuntime {
     private final String dotnetCommand;
+    private final Path databasePath;
     private Process process;
-    private Path tempDirectory;
-    private Path databasePath;
     private int port;
 
-    public Game2048AppRuntime(String dotnetCommand) {
+    public Game2048AppRuntime(String dotnetCommand, String databasePath) {
         this.dotnetCommand = dotnetCommand;
+        this.databasePath = Path.of(databasePath).toAbsolutePath();
     }
 
     public synchronized void start() {
@@ -29,9 +27,11 @@ public class Game2048AppRuntime {
 
         try {
             port = findAvailablePort();
-            tempDirectory = Files.createTempDirectory("game2048-e2e-");
-            databasePath = tempDirectory.resolve("game2048.db");
-            File logFile = tempDirectory.resolve("game2048.log").toFile();
+            Files.createDirectories(this.databasePath.getParent());
+            File logFile = this.databasePath.resolveSibling("game2048.log").toFile();
+            if (logFile.exists() && !logFile.delete()) {
+                throw new IOException("Failed to reset log file: " + logFile.getAbsolutePath());
+            }
 
             ProcessBuilder processBuilder = new ProcessBuilder(
                     dotnetCommand,
@@ -44,7 +44,7 @@ public class Game2048AppRuntime {
             processBuilder.redirectErrorStream(true);
             processBuilder.redirectOutput(ProcessBuilder.Redirect.appendTo(logFile));
             processBuilder.environment().put("ASPNETCORE_URLS", getBaseUrl());
-            processBuilder.environment().put("Game2048__DatabasePath", databasePath.toAbsolutePath().toString());
+            processBuilder.environment().put("Game2048__DatabasePath", databasePath.toString());
             processBuilder.environment().put("Logging__LogLevel__Default", "Warning");
 
             System.out.println("[INFO] Starting Game2048 web app on " + getBaseUrl());
@@ -72,22 +72,6 @@ public class Game2048AppRuntime {
             }
         }
 
-        if (tempDirectory != null) {
-            try (Stream<Path> files = Files.walk(tempDirectory)) {
-                files.sorted(Comparator.reverseOrder()).forEach(path -> {
-                    try {
-                        Files.deleteIfExists(path);
-                    } catch (IOException e) {
-                        throw new IllegalStateException("Failed to delete temporary file: " + path, e);
-                    }
-                });
-            } catch (IOException e) {
-                throw new IllegalStateException("Failed to clean up the Game2048 test workspace.", e);
-            } finally {
-                tempDirectory = null;
-                databasePath = null;
-            }
-        }
     }
 
     public synchronized String getBaseUrl() {
@@ -95,9 +79,6 @@ public class Game2048AppRuntime {
     }
 
     public synchronized Path getDatabasePath() {
-        if (databasePath == null) {
-            throw new IllegalStateException("The Game2048 web app is not running.");
-        }
         return databasePath;
     }
 

@@ -1,5 +1,25 @@
+spring:
+  datasource:
+    driver-class-name: org.sqlite.JDBC
+    url: jdbc:sqlite:${testcharm.game2048.database-path}
+  jpa:
+    database-platform: org.sqlite.hibernate.dialect.SQLiteDialect
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
+        physical_naming_strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+        jdbc:
+          lob:
+            non_contextual_creation: true
+
 testcharm:
   dal:
     dumpinput: ${TESTCHARM_DAL_DUMPINPUT:true}
   app:
     command: ${TESTCHARM_DOTNET_COMMAND:dotnet}
+  game2048:
+    database-path: ${TESTCHARM_GAME2048_DATABASE_PATH:${user.dir}/build/game2048-e2e.db}
