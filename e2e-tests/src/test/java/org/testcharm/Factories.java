@@ -6,6 +6,7 @@ import com.github.leeonky.jfactory.MemoryDataRepository;
 import com.github.leeonky.jfactory.repo.JPADataRepository;
 import org.testcharm.entity.ExistingGameSeed;
 import org.testcharm.entity.LeaderboardEntryRow;
+import org.testcharm.entity.SavedGameRow;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -35,10 +36,11 @@ public class Factories {
 
     @Bean
     public JFactory factorySet(JPADataRepository jpaDataRepository, Game2048AppRuntime game2048AppRuntime) {
-        return new EntityFactory(
-                new CompositeDataRepository(new MemoryDataRepository())
-                        .registerByType(ExistingGameSeed.class, new ExistingGameSeedRepository(game2048AppRuntime))
-                        .registerByType(LeaderboardEntryRow.class, jpaDataRepository)
-        );
+                return new EntityFactory(
+                        new CompositeDataRepository(new MemoryDataRepository())
+                                .registerByType(ExistingGameSeed.class, new ExistingGameSeedRepository(game2048AppRuntime))
+                                .registerByType(LeaderboardEntryRow.class, jpaDataRepository)
+                                .registerByType(SavedGameRow.class, jpaDataRepository)
+                );
     }
 }

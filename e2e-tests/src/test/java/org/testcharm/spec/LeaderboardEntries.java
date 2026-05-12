@@ -9,7 +9,6 @@ public class LeaderboardEntries {
     public static class 排行榜记录 extends Spec<LeaderboardEntryRow> {
         @Override
         public void main() {
-            property("id").ignore();
             property("updatedAtUtc").value(Instant.parse("2026-01-01T00:00:00Z"));
         }
     }

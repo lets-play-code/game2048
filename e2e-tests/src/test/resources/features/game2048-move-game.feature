@@ -37,29 +37,18 @@
       """
       (+body.json.tiles.value[])= ['' '' '' '' '' '' '' '' '' '' '' '' '' '' '2' '2']
       """
-    当GET "/api/saves"
-    那么response should be:
+    那么所有"存档记录"应为:
       """
-      body.json= [{
+      = [{
+        id= *
         slotKey: "auto"
-        hasData: true
+        boardJson= *
         score: 0
+        win: false
+        lose: false
+        scoreRecorded: false
+        leakedShouldAddTile: false
         savedAtUtc= *
-      }{
-        slotKey: "slot1"
-        hasData: false
-        score= null
-        savedAtUtc= null
-      }{
-        slotKey: "slot2"
-        hasData: false
-        score= null
-        savedAtUtc= null
-      }{
-        slotKey: "slot3"
-        hasData: false
-        score= null
-        savedAtUtc= null
       }]
       """
 
@@ -105,29 +94,18 @@
       """
       (+body.json.tiles.value[])= ['' '' '' '' '' '' '' '' '' '' '' '' '' '' '2' '4']
       """
-    当GET "/api/saves"
-    那么response should be:
+    那么所有"存档记录"应为:
       """
-      body.json= [{
+      = [{
+        id= *
         slotKey: "auto"
-        hasData: true
+        boardJson= *
         score: 7
+        win: false
+        lose: false
+        scoreRecorded: false
+        leakedShouldAddTile: true
         savedAtUtc= *
-      }{
-        slotKey: "slot1"
-        hasData: false
-        score= null
-        savedAtUtc= null
-      }{
-        slotKey: "slot2"
-        hasData: false
-        score= null
-        savedAtUtc= null
-      }{
-        slotKey: "slot3"
-        hasData: false
-        score= null
-        savedAtUtc= null
       }]
       """
 
@@ -173,29 +151,18 @@
       """
       body.json.tiles.value[]= ['16' '32' '64' '128' '256' '512' '1024' '2' '4' '8' '16' '32' '4' '4' '8' '2']
       """
-    当GET "/api/saves"
-    那么response should be:
+    那么所有"存档记录"应为:
       """
-      body.json= [{
+      = [{
+        id= *
         slotKey: "auto"
-        hasData: true
+        boardJson: '["16","32","64","128","256","512","1024","2","4","8","16","32","4","4","8","2"]'
         score: 12
+        win: false
+        lose: false
+        scoreRecorded: false
+        leakedShouldAddTile: true
         savedAtUtc= *
-      }{
-        slotKey: "slot1"
-        hasData: false
-        score= null
-        savedAtUtc= null
-      }{
-        slotKey: "slot2"
-        hasData: false
-        score= null
-        savedAtUtc= null
-      }{
-        slotKey: "slot3"
-        hasData: false
-        score= null
-        savedAtUtc= null
       }]
       """
 
@@ -243,29 +210,18 @@
       """
       (+body.json.tiles.value[])= ['' '' '' '' '' '' '' '' '' '' '' '' '' '' '2' '2']
       """
-    当GET "/api/saves"
-    那么response should be:
+    那么所有"存档记录"应为:
       """
-      body.json= [{
+      = [{
+        id= *
         slotKey: "auto"
-        hasData: true
+        boardJson= *
         score: 0
+        win: false
+        lose: false
+        scoreRecorded: false
+        leakedShouldAddTile: false
         savedAtUtc= *
-      }{
-        slotKey: "slot1"
-        hasData: false
-        score= null
-        savedAtUtc= null
-      }{
-        slotKey: "slot2"
-        hasData: false
-        score= null
-        savedAtUtc= null
-      }{
-        slotKey: "slot3"
-        hasData: false
-        score= null
-        savedAtUtc= null
       }]
       """
 
@@ -315,29 +271,18 @@
       """
       body.json.messages= ['You won!' 'Press ESC to play again' 'You won!' 'Press ESC to play again' 'You won!' 'Press ESC to play again' 'You won!' 'Press ESC to play again' 'You won!' 'Press ESC to play again' 'You won!' 'Press ESC to play again' 'You won!' 'Press ESC to play again' 'You won!' 'Press ESC to play again' 'You won!' 'Press ESC to play again' 'You won!' 'Press ESC to play again' 'You won!' 'Press ESC to play again' 'You won!' 'Press ESC to play again' 'You won!' 'Press ESC to play again' 'You won!' 'Press ESC to play again' 'You won!' 'Press ESC to play again' 'You won!' 'Press ESC to play again']
       """
-    当GET "/api/saves"
-    那么response should be:
+    那么所有"存档记录"应为:
       """
-      body.json= [{
+      = [{
+        id= *
         slotKey: "auto"
-        hasData: true
+        boardJson: '["16","32","64","128","256","512","2","4","8","16","32","64","2048","4","8","2"]'
         score: 2148
+        win: true
+        lose: false
+        scoreRecorded: false
+        leakedShouldAddTile: true
         savedAtUtc= *
-      }{
-        slotKey: "slot1"
-        hasData: false
-        score= null
-        savedAtUtc= null
-      }{
-        slotKey: "slot2"
-        hasData: false
-        score= null
-        savedAtUtc= null
-      }{
-        slotKey: "slot3"
-        hasData: false
-        score= null
-        savedAtUtc= null
       }]
       """
 
@@ -387,28 +332,17 @@
       """
       body.json.messages= ['Game over!' 'You lose!' 'Press ESC to play again' 'Game over!' 'You lose!' 'Press ESC to play again' 'Game over!' 'You lose!' 'Press ESC to play again' 'Game over!' 'You lose!' 'Press ESC to play again' 'Game over!' 'You lose!' 'Press ESC to play again' 'Game over!' 'You lose!' 'Press ESC to play again' 'Game over!' 'You lose!' 'Press ESC to play again' 'Game over!' 'You lose!' 'Press ESC to play again' 'Game over!' 'You lose!' 'Press ESC to play again' 'Game over!' 'You lose!' 'Press ESC to play again' 'Game over!' 'You lose!' 'Press ESC to play again' 'Game over!' 'You lose!' 'Press ESC to play again' 'Game over!' 'You lose!' 'Press ESC to play again' 'Game over!' 'You lose!' 'Press ESC to play again' 'Game over!' 'You lose!' 'Press ESC to play again' 'Game over!' 'You lose!' 'Press ESC to play again']
       """
-    当GET "/api/saves"
-    那么response should be:
+    那么所有"存档记录"应为:
       """
-      body.json= [{
+      = [{
+        id= *
         slotKey: "auto"
-        hasData: true
+        boardJson: '["2","4","8","16","32","64","128","256","512","1024","2","4","8","16","32","64"]'
         score: 24
+        win: false
+        lose: true
+        scoreRecorded: false
+        leakedShouldAddTile: false
         savedAtUtc= *
-      }{
-        slotKey: "slot1"
-        hasData: false
-        score= null
-        savedAtUtc= null
-      }{
-        slotKey: "slot2"
-        hasData: false
-        score= null
-        savedAtUtc= null
-      }{
-        slotKey: "slot3"
-        hasData: false
-        score= null
-        savedAtUtc= null
       }]
       """
