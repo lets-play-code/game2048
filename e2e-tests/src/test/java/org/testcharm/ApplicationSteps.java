@@ -3,7 +3,6 @@ package org.testcharm;
 import com.github.leeonky.cucumber.restful.RestfulStep;
 import com.github.leeonky.dal.Assertions;
 import com.github.leeonky.jfactory.JFactory;
-import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.spring.CucumberContextConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,10 +39,6 @@ public class ApplicationSteps {
     @Before(order = 1)
     public void clearState() {
         jFactory.getDataRepository().clear();
-    }
-
-    @After
-    public void stopApplication() {
-        appRuntime.stop();
+        appRuntime.clearData();
     }
 }

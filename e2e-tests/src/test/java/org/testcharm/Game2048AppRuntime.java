@@ -7,17 +7,24 @@ import java.net.ServerSocket;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.concurrent.TimeUnit;
 
 public class Game2048AppRuntime {
     private final String dotnetCommand;
     private final Path databasePath;
+    private final Thread shutdownHook;
     private Process process;
     private int port;
 
     public Game2048AppRuntime(String dotnetCommand, String databasePath) {
         this.dotnetCommand = dotnetCommand;
         this.databasePath = Path.of(databasePath).toAbsolutePath();
+        this.shutdownHook = new Thread(this::stop, "game2048-e2e-runtime-shutdown");
+        Runtime.getRuntime().addShutdownHook(shutdownHook);
     }
 
     public synchronized void start() {
@@ -85,6 +92,15 @@ public class Game2048AppRuntime {
 
     public synchronized boolean isRunning() {
         return process != null && process.isAlive();
+    }
+
+    public void clearData() {
+        try (Connection connection = DriverManager.getConnection("jdbc:sqlite:" + databasePath);
+             Statement statement = connection.createStatement()) {
+            statement.executeUpdate("DELETE FROM LeaderboardEntries");
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to clear Game2048 saved games.", e);
+        }
     }
 
     private int findAvailablePort() throws IOException {
