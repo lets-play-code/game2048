@@ -35,7 +35,10 @@
       """
     那么response should be:
       """
-      (+body.json.tiles.value[])= ['' '' '' '' '' '' '' '' '' '' '' '' '' '' '2' '2']
+      (+body.json.tiles.value[])= ['' '' '' ''
+                                   '' '' '' ''
+                                   '' '' '' ''
+                                   '' '' '2' '2']
       """
     那么所有"存档记录"应为:
       """
@@ -92,7 +95,10 @@
       """
     那么response should be:
       """
-      (+body.json.tiles.value[])= ['' '' '' '' '' '' '' '' '' '' '' '' '' '' '2' '4']
+      (+body.json.tiles.value[])= ['' '' '' ''
+                                   '' '' '' ''
+                                   '' '' '' ''
+                                   '' '' '2' '4']
       """
     那么所有"存档记录"应为:
       """
@@ -105,6 +111,195 @@
         lose: false
         scoreRecorded: false
         leakedShouldAddTile: true
+        savedAtUtc= *
+      }]
+      """
+
+  场景: POST /api/games/{id}/move 在 direction 为 right 且棋盘已右对齐时保持棋盘不变并刷新 auto 存档
+    假如存在"已存在的游戏":
+      """
+      gameId: right-noop-game
+      score: 5
+      boardJson: '["","2","4","8","","","","","","","","","","","",""]'
+      """
+    当POST "/api/games/right-noop-game/move":
+      """
+      {
+        "direction": "right"
+      }
+      """
+    那么response should be:
+      """
+      : {
+        code= 200
+        body.json= {
+          score= 5
+          scoreText= 'Score: 5'
+          scoreTextDrawCount= 16
+          win= false
+          lose= false
+          gameOver= false
+          canMove= true
+          canSaveRecord= false
+          recordSaved= false
+          boardBackground= '#bbada0'
+          panelWidth= 4
+          panelHeight= 4
+          tileSize= 64
+          tilesMargin= 16
+          overlay= false
+          messages= []
+          tiles.size= 16
+        }
+      }
+      """
+    那么response should be:
+      """
+      body.json.tiles.value[]= ['' '2' '4' '8'
+                                '' '' '' ''
+                                '' '' '' ''
+                                '' '' '' '']
+      """
+    那么所有"存档记录"应为:
+      """
+      = [{
+        id= *
+        slotKey: "auto"
+        boardJson.json: ['' '2' '4' '8'
+                         '' '' '' ''
+                         '' '' '' ''
+                         '' '' '' '']
+        score: 5
+        win: false
+        lose: false
+        scoreRecorded: false
+        leakedShouldAddTile: false
+        savedAtUtc= *
+      }]
+      """
+
+  场景: POST /api/games/{id}/move 在 direction 为 up 且棋盘已上对齐时保持棋盘不变并刷新 auto 存档
+    假如存在"已存在的游戏":
+      """
+      gameId: up-noop-game
+      score: 5
+      boardJson: '["2","","","","4","","","","8","","","","","","",""]'
+      """
+    当POST "/api/games/up-noop-game/move":
+      """
+      {
+        "direction": "up"
+      }
+      """
+    那么response should be:
+      """
+      : {
+        code= 200
+        body.json= {
+          score= 5
+          scoreText= 'Score: 5'
+          scoreTextDrawCount= 16
+          win= false
+          lose= false
+          gameOver= false
+          canMove= true
+          canSaveRecord= false
+          recordSaved= false
+          boardBackground= '#bbada0'
+          panelWidth= 4
+          panelHeight= 4
+          tileSize= 64
+          tilesMargin= 16
+          overlay= false
+          messages= []
+          tiles.size= 16
+        }
+      }
+      """
+    那么response should be:
+      """
+      body.json.tiles.value[]= ['2' '' '' ''
+                                '4' '' '' ''
+                                '8' '' '' ''
+                                '' '' '' '']
+      """
+    那么所有"存档记录"应为:
+      """
+      = [{
+        id= *
+        slotKey: "auto"
+        boardJson.json: ['2' '' '' ''
+                         '4' '' '' ''
+                         '8' '' '' ''
+                         '' '' '' '']
+        score: 5
+        win: false
+        lose: false
+        scoreRecorded: false
+        leakedShouldAddTile: false
+        savedAtUtc= *
+      }]
+      """
+
+  场景: POST /api/games/{id}/move 在 direction 为 down 且棋盘已下对齐时保持棋盘不变并刷新 auto 存档
+    假如存在"已存在的游戏":
+      """
+      gameId: down-noop-game
+      score: 5
+      boardJson: '["","","","","2","","","","4","","","","8","","",""]'
+      """
+    当POST "/api/games/down-noop-game/move":
+      """
+      {
+        "direction": "down"
+      }
+      """
+    那么response should be:
+      """
+      : {
+        code= 200
+        body.json= {
+          score= 5
+          scoreText= 'Score: 5'
+          scoreTextDrawCount= 16
+          win= false
+          lose= false
+          gameOver= false
+          canMove= true
+          canSaveRecord= false
+          recordSaved= false
+          boardBackground= '#bbada0'
+          panelWidth= 4
+          panelHeight= 4
+          tileSize= 64
+          tilesMargin= 16
+          overlay= false
+          messages= []
+          tiles.size= 16
+        }
+      }
+      """
+    那么response should be:
+      """
+      body.json.tiles.value[]= ['' '' '' ''
+                                '2' '' '' ''
+                                '4' '' '' ''
+                                '8' '' '' '']
+      """
+    那么所有"存档记录"应为:
+      """
+      = [{
+        id= *
+        slotKey: "auto"
+        boardJson.json: ['' '' '' ''
+                         '2' '' '' ''
+                         '4' '' '' ''
+                         '8' '' '' '']
+        score: 5
+        win: false
+        lose: false
+        scoreRecorded: false
+        leakedShouldAddTile: false
         savedAtUtc= *
       }]
       """
@@ -149,14 +344,20 @@
       """
     那么response should be:
       """
-      body.json.tiles.value[]= ['16' '32' '64' '128' '256' '512' '1024' '2' '4' '8' '16' '32' '4' '4' '8' '2']
+      body.json.tiles.value[]= ['16' '32' '64' '128'
+                                '256' '512' '1024' '2'
+                                '4' '8' '16' '32'
+                                '4' '4' '8' '2']
       """
     那么所有"存档记录"应为:
       """
       = [{
         id= *
         slotKey: "auto"
-        boardJson: '["16","32","64","128","256","512","1024","2","4","8","16","32","4","4","8","2"]'
+        boardJson.json: ['16' '32' '64' '128'
+                        '256' '512' '1024' '2'
+                        '4' '8' '16' '32'
+                        '4' '4' '8' '2']
         score: 12
         win: false
         lose: false
@@ -208,7 +409,10 @@
       """
     那么response should be:
       """
-      (+body.json.tiles.value[])= ['' '' '' '' '' '' '' '' '' '' '' '' '' '' '2' '2']
+      (+body.json.tiles.value[])= ['' '' '' ''
+                                   '' '' '' ''
+                                   '' '' '' ''
+                                   '' '' '2' '2']
       """
     那么所有"存档记录"应为:
       """
@@ -265,7 +469,10 @@
       """
     那么response should be:
       """
-      body.json.tiles.value[]= ['16' '32' '64' '128' '256' '512' '2' '4' '8' '16' '32' '64' '2048' '4' '8' '2']
+      body.json.tiles.value[]= ['16' '32' '64' '128'
+                                '256' '512' '2' '4'
+                                '8' '16' '32' '64'
+                                '2048' '4' '8' '2']
       """
     那么response should be:
       """
@@ -276,7 +483,10 @@
       = [{
         id= *
         slotKey: "auto"
-        boardJson: '["16","32","64","128","256","512","2","4","8","16","32","64","2048","4","8","2"]'
+        boardJson.json: ['16' '32' '64' '128'
+                        '256' '512' '2' '4'
+                        '8' '16' '32' '64'
+                        '2048' '4' '8' '2']
         score: 2148
         win: true
         lose: false
@@ -326,7 +536,10 @@
       """
     那么response should be:
       """
-      body.json.tiles.value[]= ['2' '4' '8' '16' '32' '64' '128' '256' '512' '1024' '2' '4' '8' '16' '32' '64']
+      body.json.tiles.value[]= ['2' '4' '8' '16'
+                                '32' '64' '128' '256'
+                                '512' '1024' '2' '4'
+                                '8' '16' '32' '64']
       """
     那么response should be:
       """
@@ -337,7 +550,10 @@
       = [{
         id= *
         slotKey: "auto"
-        boardJson: '["2","4","8","16","32","64","128","256","512","1024","2","4","8","16","32","64"]'
+        boardJson.json: ['2' '4' '8' '16'
+                        '32' '64' '128' '256'
+                        '512' '1024' '2' '4'
+                        '8' '16' '32' '64']
         score: 24
         win: false
         lose: true
