@@ -19,6 +19,7 @@ string databaseDirectory = Path.GetDirectoryName(databasePath) ?? builder.Enviro
 Directory.CreateDirectory(databaseDirectory);
 Game2048Model.ConfigurePersistence(databasePath);
 Game2048Model.EnsureDatabaseReady();
+Game2048Model.ConfigureGeneratedTileValue(builder.Configuration["Game2048:ForcedGeneratedTileValue"]);
 
 var app = builder.Build();
 var games = new ConcurrentDictionary<string, Game2048Model>();
@@ -133,6 +134,19 @@ app.MapPost("/api/games/{id}/leaderboard", (string id, SaveLeaderboardRecordRequ
 
 if (enableTestApi)
 {
+    app.MapPost("/api/test/generated-tile-value", (GeneratedTileValueRequest request) =>
+    {
+        try
+        {
+            Game2048Model.ConfigureGeneratedTileValue(request.Value);
+            return Results.NoContent();
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new ErrorResponse(ex.Message));
+        }
+    });
+
     app.MapPost("/api/test/games/clear-cache", () =>
     {
         games.Clear();
@@ -174,6 +188,7 @@ app.Run();
 
 public record MoveRequest(string Direction);
 public record SaveLeaderboardRecordRequest(string PlayerName);
+public record GeneratedTileValueRequest(string Value);
 public record SeedExistingGameRequest(string BoardJson, int Score, bool Win, bool Lose, bool ScoreRecorded, bool LeakedShouldAddTile);
 public record ErrorResponse(string Error);
 public record GameCreatedResponse(string Id, Game2048StateModel State);

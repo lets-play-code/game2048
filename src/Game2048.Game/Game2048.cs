@@ -20,8 +20,10 @@ public class Game2048
     private static readonly Random random = new Random();
     private static readonly object leaderboardLock = new object();
     private static readonly object persistenceLock = new object();
+    private static readonly object generatedTileValueLock = new object();
     private static readonly string[] saveSlotKeys = new[] { "auto", "slot1", "slot2", "slot3" };
     private static string configuredDatabasePath;
+    private static string configuredGeneratedTileValue;
 
     private Tile[] myTiles;
     private bool myScoreRecorded = false;
@@ -52,6 +54,19 @@ public class Game2048
     {
         using Game2048DbContext context = CreateDbContext();
         context.Database.Migrate();
+    }
+
+    public static void ConfigureGeneratedTileValue(string tileValue)
+    {
+        if (tileValue != null && tileValue != "2" && tileValue != "4")
+        {
+            throw new ArgumentException("Generated tile value must be '2', '4', or null.", nameof(tileValue));
+        }
+
+        lock (generatedTileValueLock)
+        {
+            configuredGeneratedTileValue = tileValue;
+        }
     }
 
     public void resetGame()
@@ -420,7 +435,7 @@ public class Game2048
             emptyTile = findTileForSpaceIndex(spaceIndex);
         }
 
-        emptyTile.value = new string[] { "2", "4" }[random.NextDouble() < 0.9 ? 0 : 1];
+        emptyTile.value = nextTileValue();
     }
 
     private Tile findTileForSpaceIndex(int targetIndex)
@@ -454,6 +469,19 @@ public class Game2048
             }
         }
         return list;
+    }
+
+    private static string nextTileValue()
+    {
+        lock (generatedTileValueLock)
+        {
+            if (configuredGeneratedTileValue != null)
+            {
+                return configuredGeneratedTileValue;
+            }
+        }
+
+        return random.NextDouble() < 0.9 ? "2" : "4";
     }
 
     private bool isFull()

@@ -40,5 +40,6 @@ public class ApplicationSteps {
     public void clearState() {
         jFactory.getDataRepository().clear();
         appRuntime.clearData();
+        appRuntime.applyConfiguredGeneratedTileValue();
     }
 }

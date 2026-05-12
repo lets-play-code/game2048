@@ -37,6 +37,14 @@ internal sealed class Game2048PersistenceScope : IDisposable
     {
         try
         {
+            try
+            {
+                InvokeStaticGameMethod("ConfigureGeneratedTileValue", new object[] { null });
+            }
+            catch
+            {
+            }
+
             if (Directory.Exists(rootDirectory))
             {
                 Directory.Delete(rootDirectory, recursive: true);

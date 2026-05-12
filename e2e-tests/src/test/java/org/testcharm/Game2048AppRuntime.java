@@ -2,11 +2,13 @@ package org.testcharm;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.ServerSocket;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -16,13 +18,15 @@ import java.util.concurrent.TimeUnit;
 public class Game2048AppRuntime {
     private final String dotnetCommand;
     private final Path databasePath;
+    private final String forcedGeneratedTileValue;
     private final Thread shutdownHook;
     private Process process;
     private int port;
 
-    public Game2048AppRuntime(String dotnetCommand, String databasePath) {
+    public Game2048AppRuntime(String dotnetCommand, String databasePath, String forcedGeneratedTileValue) {
         this.dotnetCommand = dotnetCommand;
         this.databasePath = Path.of(databasePath).toAbsolutePath();
+        this.forcedGeneratedTileValue = forcedGeneratedTileValue;
         this.shutdownHook = new Thread(this::stop, "game2048-e2e-runtime-shutdown");
         Runtime.getRuntime().addShutdownHook(shutdownHook);
     }
@@ -58,6 +62,7 @@ public class Game2048AppRuntime {
             System.out.println("[INFO] Starting Game2048 web app on " + getBaseUrl());
             process = processBuilder.start();
             waitUntilReady(logFile.toPath());
+            applyConfiguredGeneratedTileValue();
         } catch (IOException e) {
             stop();
             throw new IllegalStateException("Failed to start the Game2048 web app.", e);
@@ -92,6 +97,22 @@ public class Game2048AppRuntime {
 
     public synchronized boolean isRunning() {
         return process != null && process.isAlive();
+    }
+
+    public synchronized void applyConfiguredGeneratedTileValue() {
+        if (forcedGeneratedTileValue == null || forcedGeneratedTileValue.isBlank()) {
+            return;
+        }
+
+        forceGeneratedTileValue(forcedGeneratedTileValue);
+    }
+
+    public synchronized void forceGeneratedTileValue(String value) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException("Generated tile value is required.");
+        }
+
+        postJson("/api/test/generated-tile-value", "{\"value\":\"" + value + "\"}");
     }
 
     public void clearData() {
@@ -146,6 +167,29 @@ public class Game2048AppRuntime {
             return new String(Files.readAllBytes(logPath));
         } catch (IOException e) {
             return "(failed to read process log: " + e.getMessage() + ")";
+        }
+    }
+
+    private void postJson(String path, String requestBody) {
+        try {
+            HttpURLConnection connection = (HttpURLConnection) new URL(getBaseUrl() + path).openConnection();
+            connection.setConnectTimeout(500);
+            connection.setReadTimeout(500);
+            connection.setRequestMethod("POST");
+            connection.setDoOutput(true);
+            connection.setRequestProperty("Content-Type", "application/json");
+            byte[] bytes = requestBody.getBytes(StandardCharsets.UTF_8);
+            connection.setFixedLengthStreamingMode(bytes.length);
+            try (OutputStream outputStream = connection.getOutputStream()) {
+                outputStream.write(bytes);
+            }
+
+            int responseCode = connection.getResponseCode();
+            if (responseCode < 200 || responseCode >= 300) {
+                throw new IllegalStateException("Request failed with status code " + responseCode + ".");
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to call the Game2048 test API.", e);
         }
     }
 }

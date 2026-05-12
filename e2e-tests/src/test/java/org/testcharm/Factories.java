@@ -18,8 +18,9 @@ public class Factories {
     @Bean
     public Game2048AppRuntime game2048AppRuntime(
             @Value("${testcharm.app.command:dotnet}") String dotnetCommand,
-            @Value("${testcharm.game2048.database-path}") String databasePath) {
-        return new Game2048AppRuntime(dotnetCommand, databasePath);
+            @Value("${testcharm.game2048.database-path}") String databasePath,
+            @Value("${testcharm.game2048.forced-tile-value:}") String forcedTileValue) {
+        return new Game2048AppRuntime(dotnetCommand, databasePath, forcedTileValue);
     }
 
     @Bean

@@ -143,6 +143,32 @@ public class Game2048WebTest
         Assert.Equal("2,4,.,.,.,.,.,.,.,.,.,16,.,.,.,.", GetBoardSignature(state));
     }
 
+    [Fact]
+    public async Task test_api_can_force_generated_tile_values_for_stable_api_tests()
+    {
+        using Game2048PersistenceScope scope = new Game2048PersistenceScope();
+        await using Game2048WebApplicationFactory factory = scope.CreateFactory();
+        using HttpClient client = factory.CreateClient();
+
+        HttpResponseMessage configureResponse = await client.PostAsJsonAsync("/api/test/generated-tile-value", new
+        {
+            value = "4"
+        });
+        configureResponse.EnsureSuccessStatusCode();
+
+        for (int attempt = 0; attempt < 10; attempt++)
+        {
+            GameCreatedResponse created = await CreateGameAsync(client);
+            List<string> generatedTileValues = created.State.Tiles
+                .Where(tile => !string.IsNullOrEmpty(tile.Value))
+                .Select(tile => tile.Value)
+                .ToList();
+
+            Assert.Equal(2, generatedTileValues.Count);
+            Assert.All(generatedTileValues, value => Assert.Equal("4", value));
+        }
+    }
+
     private static void AssertEmptySlot(SaveSummaryResponse slot, string slotKey)
     {
         Assert.Equal(slotKey, slot.SlotKey);
