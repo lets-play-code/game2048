@@ -1,0 +1,5 @@
+testcharm:
+  dal:
+    dumpinput: ${TESTCHARM_DAL_DUMPINPUT:true}
+  app:
+    command: ${TESTCHARM_DOTNET_COMMAND:dotnet}
