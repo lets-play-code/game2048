@@ -3,7 +3,7 @@
 
   场景: POST /api/games 返回一个新的游戏状态
     当POST "/api/games":
-      """ application/json
+      """
       {}
       """
     那么response should be:

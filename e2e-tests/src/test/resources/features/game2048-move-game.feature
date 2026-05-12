@@ -1,0 +1,268 @@
+# language: zh-CN
+功能: 移动 2048 游戏
+
+  场景: POST /api/games/{id}/move 会为不存在的 id 懒创建游戏并刷新 auto 存档
+    当POST "/api/games/lazy-move-game/move":
+      """
+      {
+        "direction": "legacy"
+      }
+      """
+    那么response should be:
+      """
+      : {
+        code= 200
+        body.json= {
+          score= 0
+          scoreText= 'Score: 0'
+          scoreTextDrawCount= 16
+          win= false
+          lose= false
+          gameOver= false
+          canMove= true
+          canSaveRecord= false
+          recordSaved= false
+          boardBackground= '#bbada0'
+          panelWidth= 4
+          panelHeight= 4
+          tileSize= 64
+          tilesMargin= 16
+          overlay= false
+          messages= []
+          tiles.size= 16
+        }
+      }
+      """
+    那么response should be:
+      """
+      (+body.json.tiles.value[])= ['' '' '' '' '' '' '' '' '' '' '' '' '' '' '2' '2']
+      """
+    当GET "/api/saves"
+    那么response should be:
+      """
+      body.json= [{
+        slotKey: "auto"
+        hasData: true
+        score: 0
+        savedAtUtc= *
+      }{
+        slotKey: "slot1"
+        hasData: false
+        score= null
+        savedAtUtc= null
+      }{
+        slotKey: "slot2"
+        hasData: false
+        score= null
+        savedAtUtc= null
+      }{
+        slotKey: "slot3"
+        hasData: false
+        score= null
+        savedAtUtc= null
+      }]
+      """
+
+  场景: POST /api/games/{id}/move 会合并方块并刷新 auto 存档
+    假如存在"已存在的游戏":
+      """
+      gameId: movable-game
+      score: 8
+      boardJson: '["16","32","64","128","256","512","1024","2","4","8","16","32","2","2","4","8"]'
+      """
+    当POST "/api/games/movable-game/move":
+      """
+      {
+        "direction": "left"
+      }
+      """
+    那么response should be:
+      """
+      : {
+        code= 200
+        body.json= {
+          score= 12
+          scoreText= 'Score: 12'
+          scoreTextDrawCount= 16
+          win= false
+          lose= false
+          gameOver= false
+          canMove= true
+          canSaveRecord= false
+          recordSaved= false
+          boardBackground= '#bbada0'
+          panelWidth= 4
+          panelHeight= 4
+          tileSize= 64
+          tilesMargin= 16
+          overlay= false
+          messages= []
+          tiles.size= 16
+        }
+      }
+      """
+    那么response should be:
+      """
+      body.json.tiles.value[]= ['16' '32' '64' '128' '256' '512' '1024' '2' '4' '8' '16' '32' '4' '4' '8' '2']
+      """
+    当GET "/api/saves"
+    那么response should be:
+      """
+      body.json= [{
+        slotKey: "auto"
+        hasData: true
+        score: 12
+        savedAtUtc= *
+      }{
+        slotKey: "slot1"
+        hasData: false
+        score= null
+        savedAtUtc= null
+      }{
+        slotKey: "slot2"
+        hasData: false
+        score= null
+        savedAtUtc= null
+      }{
+        slotKey: "slot3"
+        hasData: false
+        score= null
+        savedAtUtc= null
+      }]
+      """
+
+  场景: POST /api/games/{id}/move 在合并出 2048 后返回胜利状态并刷新 auto 存档
+    假如存在"已存在的游戏":
+      """
+      gameId: winning-game
+      score: 100
+      boardJson: '["16","32","64","128","256","512","2","4","8","16","32","64","1024","1024","4","8"]'
+      """
+    当POST "/api/games/winning-game/move":
+      """
+      {
+        "direction": "left"
+      }
+      """
+    那么response should be:
+      """
+      : {
+        code= 200
+        body.json: {
+          score= 2148
+          scoreText= 'Score: 2148'
+          scoreTextDrawCount= 16
+          win= true
+          lose= false
+          gameOver= true
+          canMove= false
+          canSaveRecord= true
+          recordSaved= false
+          boardBackground= '#bbada0'
+          panelWidth= 4
+          panelHeight= 4
+          tileSize= 64
+          tilesMargin= 16
+          overlay= true
+          messages.size= 32
+          tiles.size= 16
+        }
+      }
+      """
+    那么response should be:
+      """
+      body.json.tiles.value[]= ['16' '32' '64' '128' '256' '512' '2' '4' '8' '16' '32' '64' '2048' '4' '8' '2']
+      """
+    当GET "/api/saves"
+    那么response should be:
+      """
+      body.json= [{
+        slotKey: "auto"
+        hasData: true
+        score: 2148
+        savedAtUtc= *
+      }{
+        slotKey: "slot1"
+        hasData: false
+        score= null
+        savedAtUtc= null
+      }{
+        slotKey: "slot2"
+        hasData: false
+        score= null
+        savedAtUtc= null
+      }{
+        slotKey: "slot3"
+        hasData: false
+        score= null
+        savedAtUtc= null
+      }]
+      """
+
+  场景: POST /api/games/{id}/move 在无路可走时返回失败状态并刷新 auto 存档
+    假如存在"已存在的游戏":
+      """
+      gameId: stuck-game
+      score: 24
+      boardJson: '["2","4","8","16","32","64","128","256","512","1024","2","4","8","16","32","64"]'
+      """
+    当POST "/api/games/stuck-game/move":
+      """
+      {
+        "direction": "left"
+      }
+      """
+    那么response should be:
+      """
+      : {
+        code= 200
+        body.json: {
+          score= 24
+          scoreText= 'Score: 24'
+          scoreTextDrawCount= 16
+          win= false
+          lose= true
+          gameOver= true
+          canMove= false
+          canSaveRecord= true
+          recordSaved= false
+          boardBackground= '#bbada0'
+          panelWidth= 4
+          panelHeight= 4
+          tileSize= 64
+          tilesMargin= 16
+          overlay= true
+          messages.size= 48
+          tiles.size= 16
+        }
+      }
+      """
+    那么response should be:
+      """
+      body.json.tiles.value[]= ['2' '4' '8' '16' '32' '64' '128' '256' '512' '1024' '2' '4' '8' '16' '32' '64']
+      """
+    当GET "/api/saves"
+    那么response should be:
+      """
+      body.json= [{
+        slotKey: "auto"
+        hasData: true
+        score: 24
+        savedAtUtc= *
+      }{
+        slotKey: "slot1"
+        hasData: false
+        score= null
+        savedAtUtc= null
+      }{
+        slotKey: "slot2"
+        hasData: false
+        score= null
+        savedAtUtc= null
+      }{
+        slotKey: "slot3"
+        hasData: false
+        score= null
+        savedAtUtc= null
+      }]
+      """
