@@ -119,8 +119,9 @@ public class Game2048AppRuntime {
         try (Connection connection = DriverManager.getConnection("jdbc:sqlite:" + databasePath);
              Statement statement = connection.createStatement()) {
             statement.executeUpdate("DELETE FROM LeaderboardEntries");
+            statement.executeUpdate("DELETE FROM SavedGames");
         } catch (SQLException e) {
-            throw new IllegalStateException("Failed to clear Game2048 saved games.", e);
+            throw new IllegalStateException("Failed to clear Game2048 e2e data.", e);
         }
     }
 
