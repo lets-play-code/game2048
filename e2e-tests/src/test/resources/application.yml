@@ -25,6 +25,7 @@ testcharm:
   app:
     command: ${TESTCHARM_DOTNET_COMMAND:dotnet}
   game2048:
+    base-url: ${TESTCHARM_GAME2048_BASE_URL:http://127.0.0.1:5000}
     database-name: ${TESTCHARM_GAME2048_DATABASE:game2048_e2e}
     connection-string: Server=${TESTCHARM_MYSQL_HOST:127.0.0.1};Port=${TESTCHARM_MYSQL_PORT:53306};Database=${testcharm.game2048.database-name};User ID=${TESTCHARM_MYSQL_USER:game2048};Password=${TESTCHARM_MYSQL_PASSWORD:game2048};SslMode=None;AllowPublicKeyRetrieval=True;
     jdbc-url: jdbc:mysql://${TESTCHARM_MYSQL_HOST:127.0.0.1}:${TESTCHARM_MYSQL_PORT:53306}/${testcharm.game2048.database-name}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC

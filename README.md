@@ -62,11 +62,11 @@ dotnet build LegacyCode.sln
 
 ### 运行测试
 
-先启动 Game2048 依赖：
+先启动 Game2048 测试环境：
 
 ```bash
 cd course/testing_ai/legacy-2048-csharp
-docker compose up -d
+docker compose -f docker-compose.stack.yml up -d --build mysql8 mockserver game2048-web
 ```
 
 macOS / Linux：
@@ -92,10 +92,26 @@ cd course/testing_ai/legacy-2048-csharp/e2e-tests
 ./gradlew cucumber
 ```
 
+这套 cucumber 默认复用 `docker-compose.stack.yml` 里的 `game2048-web` 容器。
+
 默认依赖端口：
 
 - MySQL 8: `127.0.0.1:53306`
 - MockServer: `127.0.0.1:51081`
+
+如果要把 **Game2048 Web**、**Playwright** 和 **web-driver** 也一起放进容器，使用完整 stack：
+
+```bash
+cd course/testing_ai/legacy-2048-csharp
+docker compose -f docker-compose.stack.yml up -d --build
+```
+
+额外暴露端口：
+
+- Game2048 Web: `127.0.0.1:5000`
+- Playwright: `127.0.0.1:13000`
+- web-driver: `127.0.0.1:14444`
+- web-driver VNC: `127.0.0.1:17900`
 
 ### 运行 2048 游戏
 

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.ServerSocket;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -17,6 +18,7 @@ import java.util.concurrent.TimeUnit;
 
 public class Game2048AppRuntime {
     private final String dotnetCommand;
+    private final String configuredBaseUrl;
     private final String connectionString;
     private final String jdbcUrl;
     private final String databaseUser;
@@ -25,10 +27,12 @@ public class Game2048AppRuntime {
     private final String leaderboardWallUrl;
     private final Thread shutdownHook;
     private Process process;
+    private String baseUrl;
     private int port;
 
     public Game2048AppRuntime(
             String dotnetCommand,
+            String configuredBaseUrl,
             String connectionString,
             String jdbcUrl,
             String databaseUser,
@@ -36,6 +40,7 @@ public class Game2048AppRuntime {
             String forcedGeneratedTileValue,
             String leaderboardWallUrl) {
         this.dotnetCommand = dotnetCommand;
+        this.configuredBaseUrl = configuredBaseUrl;
         this.connectionString = connectionString;
         this.jdbcUrl = jdbcUrl;
         this.databaseUser = databaseUser;
@@ -47,12 +52,22 @@ public class Game2048AppRuntime {
     }
 
     public synchronized void start() {
+        if (isExternallyManaged()) {
+            if (baseUrl == null) {
+                baseUrl = configuredBaseUrl;
+            }
+            waitUntilReady(null);
+            applyConfiguredGeneratedTileValue();
+            return;
+        }
+
         if (process != null && process.isAlive()) {
             return;
         }
 
         try {
             port = findAvailablePort();
+            baseUrl = "http://127.0.0.1:" + port;
             Path logDirectory = Path.of(System.getProperty("user.dir"), "build");
             Files.createDirectories(logDirectory);
             File logFile = logDirectory.resolve("game2048-e2e.log").toFile();
@@ -87,6 +102,10 @@ public class Game2048AppRuntime {
     }
 
     public synchronized void stop() {
+        if (isExternallyManaged()) {
+            return;
+        }
+
         if (process != null) {
             process.destroy();
             try {
@@ -104,10 +123,16 @@ public class Game2048AppRuntime {
     }
 
     public synchronized String getBaseUrl() {
-        return "http://127.0.0.1:" + port;
+        if (baseUrl == null) {
+            baseUrl = "http://127.0.0.1:" + port;
+        }
+        return baseUrl;
     }
 
     public synchronized boolean isRunning() {
+        if (isExternallyManaged()) {
+            return baseUrl != null;
+        }
         return process != null && process.isAlive();
     }
 
@@ -145,7 +170,7 @@ public class Game2048AppRuntime {
 
     private void waitUntilReady(Path logPath) {
         for (int attempt = 0; attempt < 80; attempt++) {
-            if (process == null || !process.isAlive()) {
+            if (!isExternallyManaged() && (process == null || !process.isAlive())) {
                 throw new IllegalStateException("The Game2048 web app exited before it became ready.\n" + readLog(logPath));
             }
 
@@ -169,10 +194,17 @@ public class Game2048AppRuntime {
             }
         }
 
+        if (isExternallyManaged()) {
+            throw new IllegalStateException("The Game2048 web app at " + getBaseUrl() + " did not become ready in time.");
+        }
+
         throw new IllegalStateException("The Game2048 web app did not become ready in time.\n" + readLog(logPath));
     }
 
     private String readLog(Path logPath) {
+        if (logPath == null) {
+            return "(no process log captured)";
+        }
         try {
             if (!Files.exists(logPath)) {
                 return "(no process log captured)";
@@ -204,5 +236,9 @@ public class Game2048AppRuntime {
         } catch (IOException e) {
             throw new IllegalStateException("Failed to call the Game2048 test API.", e);
         }
+    }
+
+    private boolean isExternallyManaged() {
+        return configuredBaseUrl != null && !configuredBaseUrl.isBlank();
     }
 }

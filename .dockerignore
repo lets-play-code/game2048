@@ -1,0 +1,7 @@
+.git
+.idea
+.gradle
+**/bin
+**/obj
+e2e-tests/build
+tests/**/TestResults

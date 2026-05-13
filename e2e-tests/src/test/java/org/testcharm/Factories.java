@@ -23,6 +23,7 @@ public class Factories {
     @Bean
     public Game2048AppRuntime game2048AppRuntime(
             @Value("${testcharm.app.command:dotnet}") String dotnetCommand,
+            @Value("${testcharm.game2048.base-url:}") String baseUrl,
             @Value("${testcharm.game2048.connection-string}") String connectionString,
             @Value("${testcharm.game2048.jdbc-url}") String jdbcUrl,
             @Value("${spring.datasource.username}") String databaseUser,
@@ -32,6 +33,7 @@ public class Factories {
         URI endpoint = URI.create(mockServerEndpoint);
         return new Game2048AppRuntime(
                 dotnetCommand,
+                baseUrl,
                 connectionString,
                 jdbcUrl,
                 databaseUser,

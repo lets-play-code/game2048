@@ -28,5 +28,49 @@ services:
     environment:
       MOCKSERVER_LOG_LEVEL: WARN
 
+  game2048-web:
+    build:
+      context: .
+      dockerfile: docker/game2048-web/Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      ASPNETCORE_URLS: http://0.0.0.0:5000
+      Game2048__ConnectionString: Server=mysql8;Port=3306;Database=game2048_e2e;User ID=game2048;Password=game2048;SslMode=None;AllowPublicKeyRetrieval=True;
+      Game2048__EnableTestApi: "true"
+      Game2048__LeaderboardWallUrl: http://mockserver:1080/api/wall
+      Logging__LogLevel__Default: Warning
+    depends_on:
+      mysql8:
+        condition: service_healthy
+      mockserver:
+        condition: service_started
+
+  playwright:
+    image: mcr.microsoft.com/playwright:v1.50.0-jammy
+    ports:
+      - "13000:3000"
+    command: ["npx", "playwright", "run-server", "--port", "3000", "--host", "0.0.0.0"]
+    environment:
+      DISPLAY: web-driver.tool.net:99.0
+    depends_on:
+      web-driver:
+        condition: service_started
+    networks:
+      default:
+        aliases:
+          - playwright.tool.net
+
+  web-driver:
+    image: selenium/standalone-chromium:latest
+    ports:
+      - "14444:4444"
+      - "17900:7900"
+    shm_size: 2gb
+    networks:
+      default:
+        aliases:
+          - web-driver.tool.net
+
 volumes:
   mysql8-data:
