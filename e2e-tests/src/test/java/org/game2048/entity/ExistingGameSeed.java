@@ -1,4 +1,4 @@
-package org.testcharm.entity;
+package org.game2048.entity;
 
 public class ExistingGameSeed {
     private String gameId;

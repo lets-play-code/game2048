@@ -1,6 +1,6 @@
-package org.testcharm.spec;
+package org.game2048.spec;
 
-import com.github.leeonky.jfactory.Spec;
+import org.testcharm.jfactory.Spec;
 import org.mockserver.model.HttpRequest;
 
 public class MockseverVerification {

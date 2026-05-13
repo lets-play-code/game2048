@@ -1,7 +1,7 @@
-package org.testcharm.spec;
+package org.game2048.spec;
 
-import com.github.leeonky.jfactory.Spec;
-import org.testcharm.entity.LeaderboardEntryRow;
+import org.testcharm.jfactory.Spec;
+import org.game2048.entity.LeaderboardEntryRow;
 
 import java.time.Instant;
 

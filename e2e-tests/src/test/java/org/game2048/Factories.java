@@ -1,18 +1,18 @@
-package org.testcharm;
+package org.game2048;
 
-import com.github.leeonky.jfactory.CompositeDataRepository;
-import com.github.leeonky.jfactory.JFactory;
-import com.github.leeonky.jfactory.MemoryDataRepository;
-import com.github.leeonky.jfactory.repo.JPADataRepository;
+import org.testcharm.jfactory.CompositeDataRepository;
+import org.testcharm.jfactory.JFactory;
+import org.testcharm.jfactory.MemoryDataRepository;
+import org.testcharm.jfactory.repo.JPADataRepository;
 import lombok.SneakyThrows;
 import org.mockserver.client.MockServerClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.testcharm.entity.ExistingGameSeed;
-import org.testcharm.entity.LeaderboardEntryRow;
-import org.testcharm.entity.SavedGameRow;
+import org.game2048.entity.ExistingGameSeed;
+import org.game2048.entity.LeaderboardEntryRow;
+import org.game2048.entity.SavedGameRow;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;

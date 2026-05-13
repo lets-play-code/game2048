@@ -1,7 +1,7 @@
-package org.testcharm.spec;
+package org.game2048.spec;
 
-import com.github.leeonky.jfactory.Spec;
-import org.testcharm.entity.ExistingGameSeed;
+import org.testcharm.jfactory.Spec;
+import org.game2048.entity.ExistingGameSeed;
 
 public class ExistingGames {
     public static class 已存在的游戏 extends Spec<ExistingGameSeed> {

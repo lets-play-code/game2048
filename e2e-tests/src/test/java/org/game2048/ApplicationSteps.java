@@ -1,8 +1,8 @@
-package org.testcharm;
+package org.game2048;
 
-import com.github.leeonky.cucumber.restful.RestfulStep;
-import com.github.leeonky.dal.Assertions;
-import com.github.leeonky.jfactory.JFactory;
+import org.testcharm.cucumber.restful.RestfulStep;
+import org.testcharm.dal.Assertions;
+import org.testcharm.jfactory.JFactory;
 import io.cucumber.java.Before;
 import io.cucumber.spring.CucumberContextConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;

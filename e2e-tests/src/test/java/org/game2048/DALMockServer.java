@@ -1,8 +1,8 @@
-package org.testcharm;
+package org.game2048;
 
-import com.github.leeonky.dal.DAL;
-import com.github.leeonky.interpreter.InterpreterException;
-import com.github.leeonky.interpreter.SyntaxException;
+import org.testcharm.dal.DAL;
+import org.testcharm.interpreter.InterpreterException;
+import org.testcharm.interpreter.SyntaxException;
 import lombok.SneakyThrows;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.logging.MockServerLogger;

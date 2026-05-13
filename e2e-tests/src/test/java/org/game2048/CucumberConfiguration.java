@@ -1,4 +1,4 @@
-package org.testcharm;
+package org.game2048;
 
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 

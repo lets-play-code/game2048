@@ -1,7 +1,7 @@
-package org.testcharm;
+package org.game2048;
 
-import com.github.leeonky.jfactory.DataRepository;
-import org.testcharm.entity.ExistingGameSeed;
+import org.testcharm.jfactory.DataRepository;
+import org.game2048.entity.ExistingGameSeed;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
