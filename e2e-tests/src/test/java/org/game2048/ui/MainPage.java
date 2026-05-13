@@ -1,6 +1,9 @@
 package org.game2048.ui;
 
 import org.testcharm.pf.AbstractPanel;
+import org.testcharm.pf.PlaywrightElement;
+
+import java.util.List;
 
 public class MainPage extends AbstractPanel<Element> {
 
@@ -10,6 +13,20 @@ public class MainPage extends AbstractPanel<Element> {
 
     public RecordsPage records() {
         perform("caption[View Records].click");
-        return new RecordsPage(element().locate("css[.records-card]").single());
+        return new RecordsPage(locate("css[.records-card]").single());
     }
+
+    public MainPage newGame() {
+        perform("caption[New Game].click");
+        return this;
+    }
+
+    public Object score() {
+        return locate("css[.score]").single();
+    }
+
+    public List<String> board() {
+        return locate("css[.board .tile]").list().collect().stream().map(PlaywrightElement::text).toList();
+    }
+
 }
