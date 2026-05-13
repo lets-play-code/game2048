@@ -34,8 +34,8 @@ configurations {
     }
 }
 
-sourceCompatibility = '1.8'
-targetCompatibility = '1.8'
+sourceCompatibility = '17'
+targetCompatibility = '17'
 
 ext {
     set('jfactoryDal', '1.0.0-alpha.21')
@@ -54,9 +54,11 @@ dependencies {
     testImplementation "org.test-charm:RESTful-cucumber:${jfactoryDal}"
     testImplementation "org.test-charm:DAL-java:${jfactoryDal}"
     testImplementation "org.test-charm:DAL-extension-basic:${jfactoryDal}"
+    testImplementation "org.test-charm:page-flow-playwright:${jfactoryDal}"
     testImplementation 'commons-fileupload:commons-fileupload:1.5'
     testImplementation 'mysql:mysql-connector-java'
     testImplementation "org.mock-server:mockserver-client-java:5.13.2"
+    testImplementation 'com.microsoft.playwright:playwright:1.50.0'
 }
 
 task prepareSut(type: Exec) {
@@ -75,6 +77,7 @@ task cucumber(type: JavaExec) {
     environment "TESTCHARM_GAME2048_DATABASE", "game2048_e2e"
     environment "TESTCHARM_MOCK_SERVER_ENDPOINT", "http://127.0.0.1:51081"
     environment "TESTCHARM_GAME2048_BASE_URL", "http://127.0.0.1:5000"
+    environment "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD", "1"
     jvmArgs "-Dfile.encoding=UTF-8", "-Dsun.jnu.encoding=utf-8"
     args = ['--plugin', 'pretty',
             '--glue', 'org.testcharm',
