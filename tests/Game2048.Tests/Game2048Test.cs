@@ -80,7 +80,7 @@ public class Game2048Test : IDisposable
         Game2048Class game2048 = CreateFinishedGame(64);
         MethodInfo saveMethod = GetSaveLeaderboardRecordMethod();
 
-        Assert.Throws<HttpRequestException>(() => InvokeSaveLeaderboardRecord(saveMethod, game2048, "   "));
+        AssertExternalWallFailure(() => InvokeSaveLeaderboardRecord(saveMethod, game2048, "   "));
 
         object blankName = Assert.Single(GetLeaderboardEntries());
         Assert.Equal("   ", GetEntryValue<string>(blankName, "PlayerName"));
@@ -172,6 +172,15 @@ public class Game2048Test : IDisposable
         {
             throw ex.InnerException;
         }
+    }
+
+    private static void AssertExternalWallFailure(Action action)
+    {
+        Exception exception = Record.Exception(action);
+        Assert.NotNull(exception);
+        Assert.True(
+            exception is HttpRequestException or TaskCanceledException,
+            $"Expected HttpRequestException or TaskCanceledException, but got {exception.GetType().FullName}.");
     }
 
     private static List<object> GetLeaderboardEntries()

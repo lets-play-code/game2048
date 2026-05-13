@@ -45,9 +45,14 @@
       """
 
   场景: POST /api/games/{id}/leaderboard 在 wall 成功时会保存仅空白字符的名字并标记当前局已记录
-    假如存在"排行榜墙响应":
+    假如Mock API:
       """
-      statusCode: 200
+      : {
+        path.value= '/api/wall'
+        method.value= 'POST'
+      }
+      ---
+      code: 200
       """
     假如存在"已存在的游戏":
       """
@@ -85,9 +90,14 @@
       """
 
   场景: POST /api/games/{id}/leaderboard 会用更高的分数覆盖同名玩家已有最佳成绩
-    假如存在"排行榜墙响应":
+    假如Mock API:
       """
-      statusCode: 200
+      : {
+        path.value= '/api/wall'
+        method.value= 'POST'
+      }
+      ---
+      code: 200
       """
     假如存在"排行榜记录":
       | playerName | bestScore |
@@ -129,9 +139,14 @@
       """
 
   场景: POST /api/games/{id}/leaderboard 在当前分数更低时保持同名玩家已有最佳成绩
-    假如存在"排行榜墙响应":
+    假如Mock API:
       """
-      statusCode: 200
+      : {
+        path.value= '/api/wall'
+        method.value= 'POST'
+      }
+      ---
+      code: 200
       """
     假如存在"排行榜记录":
       | playerName | bestScore |
@@ -208,9 +223,14 @@
       """
 
   场景: POST /api/games/{id}/leaderboard 在 wall 失败时仍先写入数据库但不会把当前局标记为已记录
-    假如存在"排行榜墙响应":
+    假如Mock API:
       """
-      statusCode: 500
+      : {
+        path.value= '/api/wall'
+        method.value= 'POST'
+      }
+      ---
+      code: 500
       """
     假如存在"已存在的游戏":
       """

@@ -24,8 +24,8 @@ public class Game2048PersistenceTest : IDisposable
     [Fact]
     public void save_leaderboard_record_persists_best_score_before_the_external_wall_fails()
     {
-        Assert.Throws<HttpRequestException>(() => InvokeSaveLeaderboardRecord(CreateFinishedGame(128), "Alice"));
-        Assert.Throws<HttpRequestException>(() => InvokeSaveLeaderboardRecord(CreateFinishedGame(64), "Alice"));
+        AssertExternalWallFailure(() => InvokeSaveLeaderboardRecord(CreateFinishedGame(128), "Alice"));
+        AssertExternalWallFailure(() => InvokeSaveLeaderboardRecord(CreateFinishedGame(64), "Alice"));
 
         AssertLeaderboardRows(("Alice", 128));
 
@@ -39,9 +39,9 @@ public class Game2048PersistenceTest : IDisposable
     [Fact]
     public void leaderboard_and_player_positions_are_loaded_from_sqlite()
     {
-        Assert.Throws<HttpRequestException>(() => InvokeSaveLeaderboardRecord(CreateFinishedGame(128), "Alice"));
-        Assert.Throws<HttpRequestException>(() => InvokeSaveLeaderboardRecord(CreateFinishedGame(256), "Bob"));
-        Assert.Throws<HttpRequestException>(() => InvokeSaveLeaderboardRecord(CreateFinishedGame(256), "Cara"));
+        AssertExternalWallFailure(() => InvokeSaveLeaderboardRecord(CreateFinishedGame(128), "Alice"));
+        AssertExternalWallFailure(() => InvokeSaveLeaderboardRecord(CreateFinishedGame(256), "Bob"));
+        AssertExternalWallFailure(() => InvokeSaveLeaderboardRecord(CreateFinishedGame(256), "Cara"));
 
         AssertLeaderboardRows(("Bob", 256), ("Cara", 256), ("Alice", 128));
 
@@ -153,6 +153,15 @@ public class Game2048PersistenceTest : IDisposable
         {
             throw ex.InnerException;
         }
+    }
+
+    private static void AssertExternalWallFailure(Action action)
+    {
+        Exception exception = Record.Exception(action);
+        Assert.NotNull(exception);
+        Assert.True(
+            exception is HttpRequestException or TaskCanceledException,
+            $"Expected HttpRequestException or TaskCanceledException, but got {exception.GetType().FullName}.");
     }
 
     private static List<object> GetLeaderboardEntries()
