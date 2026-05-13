@@ -21,9 +21,12 @@ public class Game2048
     private static readonly object leaderboardLock = new object();
     private static readonly object persistenceLock = new object();
     private static readonly object generatedTileValueLock = new object();
+    private static readonly object leaderboardWallUrlLock = new object();
     private static readonly string[] saveSlotKeys = new[] { "auto", "slot1", "slot2", "slot3" };
+    private const string defaultLeaderboardWallUrl = "http://7k7k6666.com/api/wall";
     private static string configuredDatabasePath;
     private static string configuredGeneratedTileValue;
+    private static string configuredLeaderboardWallUrl = defaultLeaderboardWallUrl;
 
     private Tile[] myTiles;
     private bool myScoreRecorded = false;
@@ -66,6 +69,20 @@ public class Game2048
         lock (generatedTileValueLock)
         {
             configuredGeneratedTileValue = tileValue;
+        }
+    }
+
+    public static void ConfigureLeaderboardWallUrl(string wallUrl)
+    {
+        string normalizedWallUrl = string.IsNullOrWhiteSpace(wallUrl) ? defaultLeaderboardWallUrl : wallUrl;
+        if (!Uri.TryCreate(normalizedWallUrl, UriKind.Absolute, out _))
+        {
+            throw new ArgumentException("Leaderboard wall URL must be an absolute URL or null.", nameof(wallUrl));
+        }
+
+        lock (leaderboardWallUrlLock)
+        {
+            configuredLeaderboardWallUrl = normalizedWallUrl;
         }
     }
 
@@ -209,7 +226,7 @@ public class Game2048
         HttpClient client = new HttpClient();
         client.Timeout = TimeSpan.FromSeconds(3);
         HttpResponseMessage response = client.PostAsync(
-            "http://7k7k6666.com/api/wall",
+            getConfiguredLeaderboardWallUrl(),
             new StringContent(message, Encoding.UTF8, "text/plain")).GetAwaiter().GetResult();
         response.EnsureSuccessStatusCode();
 
@@ -395,6 +412,14 @@ public class Game2048
             }
 
             return configuredDatabasePath;
+        }
+    }
+
+    private static string getConfiguredLeaderboardWallUrl()
+    {
+        lock (leaderboardWallUrlLock)
+        {
+            return configuredLeaderboardWallUrl;
         }
     }
 

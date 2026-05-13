@@ -3,9 +3,22 @@ package org.testcharm.entity;
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoField;
 
 @Converter
 public class InstantStringConverter implements AttributeConverter<Instant, String> {
+    private static final DateTimeFormatter SQLITE_TIMESTAMP = new DateTimeFormatterBuilder()
+            .appendPattern("yyyy-MM-dd HH:mm:ss")
+            .optionalStart()
+            .appendFraction(ChronoField.NANO_OF_SECOND, 0, 7, true)
+            .optionalEnd()
+            .toFormatter();
+
     @Override
     public String convertToDatabaseColumn(Instant attribute) {
         return attribute == null ? null : attribute.toString();
@@ -13,6 +26,14 @@ public class InstantStringConverter implements AttributeConverter<Instant, Strin
 
     @Override
     public Instant convertToEntityAttribute(String dbData) {
-        return dbData == null ? null : Instant.parse(dbData);
+        if (dbData == null) {
+            return null;
+        }
+
+        try {
+            return Instant.parse(dbData);
+        } catch (DateTimeParseException ignored) {
+            return LocalDateTime.parse(dbData, SQLITE_TIMESTAMP).toInstant(ZoneOffset.UTC);
+        }
     }
 }

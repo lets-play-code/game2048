@@ -20,6 +20,7 @@ Directory.CreateDirectory(databaseDirectory);
 Game2048Model.ConfigurePersistence(databasePath);
 Game2048Model.EnsureDatabaseReady();
 Game2048Model.ConfigureGeneratedTileValue(builder.Configuration["Game2048:ForcedGeneratedTileValue"]);
+Game2048Model.ConfigureLeaderboardWallUrl(builder.Configuration["Game2048:LeaderboardWallUrl"]);
 
 var app = builder.Build();
 var games = new ConcurrentDictionary<string, Game2048Model>();

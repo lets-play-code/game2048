@@ -1,9 +1,14 @@
 package org.testcharm;
 
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpServer;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.URL;
 import java.nio.file.Files;
@@ -22,6 +27,9 @@ public class Game2048AppRuntime {
     private final Thread shutdownHook;
     private Process process;
     private int port;
+    private HttpServer leaderboardWallServer;
+    private int leaderboardWallPort;
+    private volatile int leaderboardWallStatusCode = 200;
 
     public Game2048AppRuntime(String dotnetCommand, String databasePath, String forcedGeneratedTileValue) {
         this.dotnetCommand = dotnetCommand;
@@ -37,6 +45,7 @@ public class Game2048AppRuntime {
         }
 
         try {
+            startLeaderboardWall();
             port = findAvailablePort();
             Files.createDirectories(this.databasePath.getParent());
             File logFile = this.databasePath.resolveSibling("game2048.log").toFile();
@@ -57,6 +66,7 @@ public class Game2048AppRuntime {
             processBuilder.environment().put("ASPNETCORE_URLS", getBaseUrl());
             processBuilder.environment().put("Game2048__DatabasePath", databasePath.toString());
             processBuilder.environment().put("Game2048__EnableTestApi", "true");
+            processBuilder.environment().put("Game2048__LeaderboardWallUrl", getLeaderboardWallUrl());
             processBuilder.environment().put("Logging__LogLevel__Default", "Warning");
 
             System.out.println("[INFO] Starting Game2048 web app on " + getBaseUrl());
@@ -85,6 +95,12 @@ public class Game2048AppRuntime {
             }
         }
 
+        if (leaderboardWallServer != null) {
+            leaderboardWallServer.stop(0);
+            leaderboardWallServer = null;
+            leaderboardWallPort = 0;
+        }
+        leaderboardWallStatusCode = 200;
     }
 
     public synchronized String getBaseUrl() {
@@ -115,6 +131,21 @@ public class Game2048AppRuntime {
         postJson("/api/test/generated-tile-value", "{\"value\":\"" + value + "\"}");
     }
 
+    public synchronized void configureLeaderboardWallStatusCode(int statusCode) {
+        if (statusCode < 100 || statusCode > 599) {
+            throw new IllegalArgumentException("Leaderboard wall status code must be between 100 and 599.");
+        }
+        leaderboardWallStatusCode = statusCode;
+    }
+
+    public synchronized int getLeaderboardWallStatusCode() {
+        return leaderboardWallStatusCode;
+    }
+
+    public synchronized void resetLeaderboardWall() {
+        leaderboardWallStatusCode = 200;
+    }
+
     public void clearData() {
         try (Connection connection = DriverManager.getConnection("jdbc:sqlite:" + databasePath);
              Statement statement = connection.createStatement()) {
@@ -123,12 +154,29 @@ public class Game2048AppRuntime {
         } catch (SQLException e) {
             throw new IllegalStateException("Failed to clear Game2048 e2e data.", e);
         }
+        resetLeaderboardWall();
     }
 
     private int findAvailablePort() throws IOException {
         try (ServerSocket socket = new ServerSocket(0)) {
             return socket.getLocalPort();
         }
+    }
+
+    private synchronized void startLeaderboardWall() throws IOException {
+        if (leaderboardWallServer != null) {
+            return;
+        }
+
+        leaderboardWallServer = HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0), 0);
+        leaderboardWallServer.createContext("/api/wall", this::handleLeaderboardWallRequest);
+        leaderboardWallServer.start();
+        leaderboardWallPort = leaderboardWallServer.getAddress().getPort();
+        leaderboardWallStatusCode = 200;
+    }
+
+    private synchronized String getLeaderboardWallUrl() {
+        return "http://127.0.0.1:" + leaderboardWallPort + "/api/wall";
     }
 
     private void waitUntilReady(Path logPath) {
@@ -191,6 +239,24 @@ public class Game2048AppRuntime {
             }
         } catch (IOException e) {
             throw new IllegalStateException("Failed to call the Game2048 test API.", e);
+        }
+    }
+
+    private void handleLeaderboardWallRequest(HttpExchange exchange) throws IOException {
+        byte[] responseBody = "ok".getBytes(StandardCharsets.UTF_8);
+        try (HttpExchange ignored = exchange) {
+            if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+                exchange.sendResponseHeaders(405, -1);
+                return;
+            }
+
+            while (exchange.getRequestBody().read() != -1) {
+            }
+            exchange.getResponseHeaders().set("Content-Type", "text/plain; charset=utf-8");
+            exchange.sendResponseHeaders(leaderboardWallStatusCode, responseBody.length);
+            try (OutputStream outputStream = exchange.getResponseBody()) {
+                outputStream.write(responseBody);
+            }
         }
     }
 }
