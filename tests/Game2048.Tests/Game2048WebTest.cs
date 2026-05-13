@@ -1,5 +1,4 @@
 using System.Net.Http.Json;
-using Microsoft.Data.Sqlite;
 using Xunit;
 
 namespace Game2048.Tests;
@@ -7,10 +6,10 @@ namespace Game2048.Tests;
 public class Game2048WebTest
 {
     [Fact]
-    public async Task startup_creates_the_configured_sqlite_database_and_applies_migrations()
+    public async Task startup_creates_the_configured_mysql_database_and_applies_migrations()
     {
         using Game2048PersistenceScope scope = new Game2048PersistenceScope();
-        Assert.False(File.Exists(scope.DatabasePath));
+        Assert.False(scope.DatabaseExists());
 
         await using Game2048WebApplicationFactory factory = scope.CreateFactory();
         using HttpClient client = factory.CreateClient();
@@ -21,24 +20,8 @@ public class Game2048WebTest
         HttpResponseMessage createGameResponse = await client.PostAsync("/api/games", content: null);
         createGameResponse.EnsureSuccessStatusCode();
 
-        Assert.True(File.Exists(scope.DatabasePath));
-
-        await using SqliteConnection connection = new SqliteConnection($"Data Source={scope.DatabasePath}");
-        await connection.OpenAsync();
-        await using SqliteCommand command = connection.CreateCommand();
-        command.CommandText = @"
-            SELECT name
-            FROM sqlite_master
-            WHERE type = 'table' AND name IN ('LeaderboardEntries', 'SavedGames', '__EFMigrationsHistory')
-            ORDER BY name;";
-
-        List<string> tables = new List<string>();
-        await using SqliteDataReader reader = await command.ExecuteReaderAsync();
-        while (await reader.ReadAsync())
-        {
-            tables.Add(reader.GetString(0));
-        }
-
+        Assert.True(scope.DatabaseExists());
+        List<string> tables = await scope.GetExistingTableNamesAsync("LeaderboardEntries", "SavedGames", "__EFMigrationsHistory");
         Assert.Equal(new[] { "LeaderboardEntries", "SavedGames", "__EFMigrationsHistory" }, tables);
     }
 

@@ -55,10 +55,8 @@ dependencies {
     testImplementation "com.github.leeonky:DAL-java:${jfactoryDal}"
     testImplementation "com.github.leeonky:DAL-extension-basic:${jfactoryDal}"
     testImplementation 'commons-fileupload:commons-fileupload:1.5'
-    testImplementation 'com.github.gwenn:sqlite-dialect:0.1.4'
-    testImplementation 'org.xerial:sqlite-jdbc:3.46.1.3'
+    testImplementation 'mysql:mysql-connector-java'
     testImplementation "org.mock-server:mockserver-client-java:5.13.2"
-    testImplementation 'org.mock-server:mockserver-netty:5.13.2'
 }
 
 task prepareSut(type: Exec) {
@@ -70,7 +68,12 @@ task cucumber(type: JavaExec) {
     main = "io.cucumber.core.cli.Main"
     classpath = configurations.cucumberRuntime + sourceSets.main.output + sourceSets.test.output
     environment "SPRING_PROFILES_ACTIVE", "test"
-    environment "TESTCHARM_GAME2048_DATABASE_PATH", "${buildDir}/game2048-e2e-${UUID.randomUUID()}.db"
+    environment "TESTCHARM_MYSQL_HOST", "127.0.0.1"
+    environment "TESTCHARM_MYSQL_PORT", "53306"
+    environment "TESTCHARM_MYSQL_USER", "game2048"
+    environment "TESTCHARM_MYSQL_PASSWORD", "game2048"
+    environment "TESTCHARM_GAME2048_DATABASE", "game2048_e2e"
+    environment "TESTCHARM_MOCK_SERVER_ENDPOINT", "http://127.0.0.1:51081"
     jvmArgs "-Dfile.encoding=UTF-8", "-Dsun.jnu.encoding=utf-8"
     args = ['--plugin', 'pretty',
             '--glue', 'org.testcharm',

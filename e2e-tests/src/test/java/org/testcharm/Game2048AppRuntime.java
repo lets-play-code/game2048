@@ -17,16 +17,29 @@ import java.util.concurrent.TimeUnit;
 
 public class Game2048AppRuntime {
     private final String dotnetCommand;
-    private final Path databasePath;
+    private final String connectionString;
+    private final String jdbcUrl;
+    private final String databaseUser;
+    private final String databasePassword;
     private final String forcedGeneratedTileValue;
     private final String leaderboardWallUrl;
     private final Thread shutdownHook;
     private Process process;
     private int port;
 
-    public Game2048AppRuntime(String dotnetCommand, String databasePath, String forcedGeneratedTileValue, String leaderboardWallUrl) {
+    public Game2048AppRuntime(
+            String dotnetCommand,
+            String connectionString,
+            String jdbcUrl,
+            String databaseUser,
+            String databasePassword,
+            String forcedGeneratedTileValue,
+            String leaderboardWallUrl) {
         this.dotnetCommand = dotnetCommand;
-        this.databasePath = Path.of(databasePath).toAbsolutePath();
+        this.connectionString = connectionString;
+        this.jdbcUrl = jdbcUrl;
+        this.databaseUser = databaseUser;
+        this.databasePassword = databasePassword;
         this.forcedGeneratedTileValue = forcedGeneratedTileValue;
         this.leaderboardWallUrl = leaderboardWallUrl;
         this.shutdownHook = new Thread(this::stop, "game2048-e2e-runtime-shutdown");
@@ -40,8 +53,9 @@ public class Game2048AppRuntime {
 
         try {
             port = findAvailablePort();
-            Files.createDirectories(this.databasePath.getParent());
-            File logFile = this.databasePath.resolveSibling("game2048.log").toFile();
+            Path logDirectory = Path.of(System.getProperty("user.dir"), "build");
+            Files.createDirectories(logDirectory);
+            File logFile = logDirectory.resolve("game2048-e2e.log").toFile();
             if (logFile.exists() && !logFile.delete()) {
                 throw new IOException("Failed to reset log file: " + logFile.getAbsolutePath());
             }
@@ -57,7 +71,7 @@ public class Game2048AppRuntime {
             processBuilder.redirectErrorStream(true);
             processBuilder.redirectOutput(ProcessBuilder.Redirect.appendTo(logFile));
             processBuilder.environment().put("ASPNETCORE_URLS", getBaseUrl());
-            processBuilder.environment().put("Game2048__DatabasePath", databasePath.toString());
+            processBuilder.environment().put("Game2048__ConnectionString", connectionString);
             processBuilder.environment().put("Game2048__EnableTestApi", "true");
             processBuilder.environment().put("Game2048__LeaderboardWallUrl", leaderboardWallUrl);
             processBuilder.environment().put("Logging__LogLevel__Default", "Warning");
@@ -93,10 +107,6 @@ public class Game2048AppRuntime {
         return "http://127.0.0.1:" + port;
     }
 
-    public synchronized Path getDatabasePath() {
-        return databasePath;
-    }
-
     public synchronized boolean isRunning() {
         return process != null && process.isAlive();
     }
@@ -118,7 +128,7 @@ public class Game2048AppRuntime {
     }
 
     public void clearData() {
-        try (Connection connection = DriverManager.getConnection("jdbc:sqlite:" + databasePath);
+        try (Connection connection = DriverManager.getConnection(jdbcUrl, databaseUser, databasePassword);
              Statement statement = connection.createStatement()) {
             statement.executeUpdate("DELETE FROM LeaderboardEntries");
             statement.executeUpdate("DELETE FROM SavedGames");

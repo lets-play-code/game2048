@@ -1,9 +1,11 @@
 spring:
   datasource:
-    driver-class-name: org.sqlite.JDBC
-    url: jdbc:sqlite:${testcharm.game2048.database-path}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${testcharm.game2048.jdbc-url}
+    username: ${TESTCHARM_MYSQL_USER:game2048}
+    password: ${TESTCHARM_MYSQL_PASSWORD:game2048}
   jpa:
-    database-platform: org.sqlite.hibernate.dialect.SQLiteDialect
+    database-platform: org.hibernate.dialect.MySQL8Dialect
     hibernate:
       ddl-auto: none
     show-sql: false
@@ -13,6 +15,7 @@ spring:
         implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
         physical_naming_strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
         jdbc:
+          time_zone: UTC
           lob:
             non_contextual_creation: true
 
@@ -22,9 +25,10 @@ testcharm:
   app:
     command: ${TESTCHARM_DOTNET_COMMAND:dotnet}
   game2048:
-    database-path: ${TESTCHARM_GAME2048_DATABASE_PATH:${user.dir}/build/game2048-e2e.db}
+    database-name: ${TESTCHARM_GAME2048_DATABASE:game2048_e2e}
+    connection-string: Server=${TESTCHARM_MYSQL_HOST:127.0.0.1};Port=${TESTCHARM_MYSQL_PORT:53306};Database=${testcharm.game2048.database-name};User ID=${TESTCHARM_MYSQL_USER:game2048};Password=${TESTCHARM_MYSQL_PASSWORD:game2048};SslMode=None;AllowPublicKeyRetrieval=True;
+    jdbc-url: jdbc:mysql://${TESTCHARM_MYSQL_HOST:127.0.0.1}:${TESTCHARM_MYSQL_PORT:53306}/${testcharm.game2048.database-name}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     forced-tile-value: ${TESTCHARM_GAME2048_FORCED_TILE_VALUE:2}
 
 mock-server:
-  endpoint: http://localhost:1081
-
+  endpoint: ${TESTCHARM_MOCK_SERVER_ENDPOINT:http://127.0.0.1:51081}

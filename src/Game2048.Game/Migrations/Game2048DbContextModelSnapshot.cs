@@ -3,6 +3,7 @@ using System;
 using Game2048.Game;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -15,28 +16,36 @@ namespace Game2048.Game.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "7.0.20");
+            modelBuilder
+                .HasAnnotation("ProductVersion", "7.0.20")
+                .HasAnnotation("Relational:MaxIdentifierLength", 64)
+                .HasAnnotation("MySql:CharSet", "utf8mb4");
 
             modelBuilder.Entity("Game2048.Game.LeaderboardEntryEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int")
+                        .HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn);
 
                     b.Property<int>("BestScore")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<string>("PlayerName")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasAnnotation("MySql:CharSet", "utf8mb4");
 
                     b.Property<DateTime>("UpdatedAtUtc")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetime(6)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("PlayerName")
                         .IsUnique();
+
+                    b.HasAnnotation("MySql:CharSet", "utf8mb4");
 
                     b.ToTable("LeaderboardEntries");
                 });
@@ -45,38 +54,44 @@ namespace Game2048.Game.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int")
+                        .HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn);
 
                     b.Property<string>("BoardJson")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("longtext")
+                        .HasAnnotation("MySql:CharSet", "utf8mb4");
 
                     b.Property<bool>("LeakedShouldAddTile")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<bool>("Lose")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<DateTime>("SavedAtUtc")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<int>("Score")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<bool>("ScoreRecorded")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("SlotKey")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)")
+                        .HasAnnotation("MySql:CharSet", "utf8mb4");
 
                     b.Property<bool>("Win")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("tinyint(1)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("SlotKey")
                         .IsUnique();
+
+                    b.HasAnnotation("MySql:CharSet", "utf8mb4");
 
                     b.ToTable("SavedGames");
                 });

@@ -12,16 +12,16 @@ import java.time.temporal.ChronoField;
 
 @Converter
 public class InstantStringConverter implements AttributeConverter<Instant, String> {
-    private static final DateTimeFormatter SQLITE_TIMESTAMP = new DateTimeFormatterBuilder()
+    private static final DateTimeFormatter SQL_TIMESTAMP = new DateTimeFormatterBuilder()
             .appendPattern("yyyy-MM-dd HH:mm:ss")
             .optionalStart()
-            .appendFraction(ChronoField.NANO_OF_SECOND, 0, 7, true)
+            .appendFraction(ChronoField.NANO_OF_SECOND, 0, 6, true)
             .optionalEnd()
             .toFormatter();
 
     @Override
     public String convertToDatabaseColumn(Instant attribute) {
-        return attribute == null ? null : attribute.toString();
+        return attribute == null ? null : SQL_TIMESTAMP.format(LocalDateTime.ofInstant(attribute, ZoneOffset.UTC));
     }
 
     @Override
@@ -33,7 +33,7 @@ public class InstantStringConverter implements AttributeConverter<Instant, Strin
         try {
             return Instant.parse(dbData);
         } catch (DateTimeParseException ignored) {
-            return LocalDateTime.parse(dbData, SQLITE_TIMESTAMP).toInstant(ZoneOffset.UTC);
+            return LocalDateTime.parse(dbData, SQL_TIMESTAMP).toInstant(ZoneOffset.UTC);
         }
     }
 }

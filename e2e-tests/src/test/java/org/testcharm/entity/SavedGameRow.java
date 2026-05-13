@@ -1,11 +1,13 @@
 package org.testcharm.entity;
 
 import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import java.time.Instant;
 
 @Entity
 @Table(name = "SavedGames")
@@ -36,7 +38,8 @@ public class SavedGameRow {
     private boolean leakedShouldAddTile;
 
     @Column(name = "SavedAtUtc", nullable = false)
-    private String savedAtUtc;
+    @Convert(converter = InstantStringConverter.class)
+    private Instant savedAtUtc;
 
     public Long getId() {
         return id;
@@ -111,11 +114,11 @@ public class SavedGameRow {
     }
 
     public String getSavedAtUtc() {
-        return savedAtUtc;
+        return savedAtUtc == null ? null : savedAtUtc.toString();
     }
 
     public SavedGameRow setSavedAtUtc(String savedAtUtc) {
-        this.savedAtUtc = savedAtUtc;
+        this.savedAtUtc = savedAtUtc == null ? null : Instant.parse(savedAtUtc);
         return this;
     }
 }

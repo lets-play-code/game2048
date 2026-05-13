@@ -23,8 +23,9 @@ public class Game2048
     private static readonly object generatedTileValueLock = new object();
     private static readonly object leaderboardWallUrlLock = new object();
     private static readonly string[] saveSlotKeys = new[] { "auto", "slot1", "slot2", "slot3" };
+    private const string defaultConnectionString = "Server=127.0.0.1;Port=53306;Database=game2048;User ID=game2048;Password=game2048;SslMode=None;AllowPublicKeyRetrieval=True;";
     private const string defaultLeaderboardWallUrl = "http://7k7k6666.com/api/wall";
-    private static string configuredDatabasePath;
+    private static string configuredConnectionString;
     private static string configuredGeneratedTileValue;
     private static string configuredLeaderboardWallUrl = defaultLeaderboardWallUrl;
 
@@ -40,16 +41,16 @@ public class Game2048
         resetGame();
     }
 
-    public static void ConfigurePersistence(string databasePath)
+    public static void ConfigurePersistence(string connectionString)
     {
-        if (string.IsNullOrWhiteSpace(databasePath))
+        if (string.IsNullOrWhiteSpace(connectionString))
         {
-            throw new ArgumentException("Database path is required.", nameof(databasePath));
+            throw new ArgumentException("Connection string is required.", nameof(connectionString));
         }
 
         lock (persistenceLock)
         {
-            configuredDatabasePath = Path.GetFullPath(databasePath);
+            configuredConnectionString = connectionString;
         }
     }
 
@@ -402,17 +403,22 @@ public class Game2048
         return values;
     }
 
-    internal static string GetConfiguredDatabasePath()
+    internal static string GetConfiguredConnectionString()
     {
         lock (persistenceLock)
         {
-            if (string.IsNullOrWhiteSpace(configuredDatabasePath))
+            if (string.IsNullOrWhiteSpace(configuredConnectionString))
             {
-                configuredDatabasePath = Path.Combine(Directory.GetCurrentDirectory(), "App_Data", "game2048.db");
+                configuredConnectionString = defaultConnectionString;
             }
 
-            return configuredDatabasePath;
+            return configuredConnectionString;
         }
+    }
+
+    public static string GetDefaultConnectionString()
+    {
+        return defaultConnectionString;
     }
 
     private static string getConfiguredLeaderboardWallUrl()
@@ -425,13 +431,6 @@ public class Game2048
 
     private static Game2048DbContext CreateDbContext()
     {
-        string databasePath = GetConfiguredDatabasePath();
-        string databaseDirectory = Path.GetDirectoryName(databasePath);
-        if (!string.IsNullOrEmpty(databaseDirectory))
-        {
-            Directory.CreateDirectory(databaseDirectory);
-        }
-
         return new Game2048DbContext();
     }
 

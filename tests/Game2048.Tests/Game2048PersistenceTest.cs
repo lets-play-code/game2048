@@ -2,7 +2,7 @@ using System.Collections;
 using System.Reflection;
 using Game2048Class = Game2048.Game.Game2048;
 using Game2048StateModel = Game2048.Game.Game2048State;
-using Microsoft.Data.Sqlite;
+using MySqlConnector;
 using Xunit;
 
 namespace Game2048.Tests;
@@ -37,7 +37,7 @@ public class Game2048PersistenceTest : IDisposable
     }
 
     [Fact]
-    public void leaderboard_and_player_positions_are_loaded_from_sqlite()
+    public void leaderboard_and_player_positions_are_loaded_from_mysql()
     {
         AssertExternalWallFailure(() => InvokeSaveLeaderboardRecord(CreateFinishedGame(128), "Alice"));
         AssertExternalWallFailure(() => InvokeSaveLeaderboardRecord(CreateFinishedGame(256), "Bob"));
@@ -106,16 +106,16 @@ public class Game2048PersistenceTest : IDisposable
 
     private void AssertLeaderboardRows(params (string PlayerName, int BestScore)[] expectedRows)
     {
-        using SqliteConnection connection = new SqliteConnection($"Data Source={persistenceScope.DatabasePath}");
+        using MySqlConnection connection = persistenceScope.CreateConnection();
         connection.Open();
-        using SqliteCommand command = connection.CreateCommand();
+        using MySqlCommand command = connection.CreateCommand();
         command.CommandText = @"
             SELECT PlayerName, BestScore
             FROM LeaderboardEntries
-            ORDER BY BestScore DESC, PlayerName COLLATE NOCASE;";
+            ORDER BY BestScore DESC, LOWER(PlayerName), PlayerName;";
 
         List<(string PlayerName, int BestScore)> actualRows = new List<(string PlayerName, int BestScore)>();
-        using SqliteDataReader reader = command.ExecuteReader();
+        using MySqlDataReader reader = command.ExecuteReader();
         while (reader.Read())
         {
             actualRows.Add((reader.GetString(0), reader.GetInt32(1)));
@@ -190,16 +190,16 @@ public class Game2048PersistenceTest : IDisposable
 
     private void AssertSavedGameRow(string slotKey, int score, bool win, bool lose, bool scoreRecorded, bool leakedShouldAddTile)
     {
-        using SqliteConnection connection = new SqliteConnection($"Data Source={persistenceScope.DatabasePath}");
+        using MySqlConnection connection = persistenceScope.CreateConnection();
         connection.Open();
-        using SqliteCommand command = connection.CreateCommand();
+        using MySqlCommand command = connection.CreateCommand();
         command.CommandText = @"
             SELECT Score, Win, Lose, ScoreRecorded, LeakedShouldAddTile
             FROM SavedGames
-            WHERE SlotKey = $slotKey;";
-        command.Parameters.AddWithValue("$slotKey", slotKey);
+            WHERE SlotKey = @slotKey;";
+        command.Parameters.AddWithValue("@slotKey", slotKey);
 
-        using SqliteDataReader reader = command.ExecuteReader();
+        using MySqlDataReader reader = command.ExecuteReader();
         Assert.True(reader.Read());
         Assert.Equal(score, reader.GetInt32(0));
         Assert.Equal(win, reader.GetBoolean(1));

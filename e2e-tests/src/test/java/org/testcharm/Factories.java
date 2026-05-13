@@ -6,7 +6,6 @@ import com.github.leeonky.jfactory.MemoryDataRepository;
 import com.github.leeonky.jfactory.repo.JPADataRepository;
 import lombok.SneakyThrows;
 import org.mockserver.client.MockServerClient;
-import org.mockserver.integration.ClientAndServer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,20 +16,28 @@ import org.testcharm.entity.SavedGameRow;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import java.net.URI;
 
 @Configuration
 public class Factories {
     @Bean
     public Game2048AppRuntime game2048AppRuntime(
             @Value("${testcharm.app.command:dotnet}") String dotnetCommand,
-            @Value("${testcharm.game2048.database-path}") String databasePath,
+            @Value("${testcharm.game2048.connection-string}") String connectionString,
+            @Value("${testcharm.game2048.jdbc-url}") String jdbcUrl,
+            @Value("${spring.datasource.username}") String databaseUser,
+            @Value("${spring.datasource.password}") String databasePassword,
             @Value("${testcharm.game2048.forced-tile-value:}") String forcedTileValue,
-            ClientAndServer mockServer) {
+            @Value("${mock-server.endpoint}") String mockServerEndpoint) {
+        URI endpoint = URI.create(mockServerEndpoint);
         return new Game2048AppRuntime(
                 dotnetCommand,
-                databasePath,
+                connectionString,
+                jdbcUrl,
+                databaseUser,
+                databasePassword,
                 forcedTileValue,
-                "http://127.0.0.1:" + mockServer.getLocalPort() + "/api/wall");
+                endpoint.resolve("/api/wall").toString());
     }
 
     @Bean
@@ -56,17 +63,13 @@ public class Factories {
     @SneakyThrows
     @Primary
     @Bean
-    public MockServerClient createMockServerClient(ClientAndServer mockServer) {
-        return new MockServerClient("127.0.0.1", mockServer.getLocalPort()) {
+    public MockServerClient createMockServerClient(@Value("${mock-server.endpoint}") String mockServerEndpoint) {
+        URI endpoint = URI.create(mockServerEndpoint);
+        int port = endpoint.getPort() == -1 ? 80 : endpoint.getPort();
+        return new MockServerClient(endpoint.getHost(), port) {
             @Override
             public void close() {
             }
         };
     }
-
-    @Bean(destroyMethod = "stop")
-    public ClientAndServer mockServer() {
-        return ClientAndServer.startClientAndServer(0);
-    }
-
 }

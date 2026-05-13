@@ -9,15 +9,13 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
 });
 
-string databasePath = builder.Configuration["Game2048:DatabasePath"];
-if (string.IsNullOrWhiteSpace(databasePath))
+string connectionString = builder.Configuration["Game2048:ConnectionString"];
+if (string.IsNullOrWhiteSpace(connectionString))
 {
-    databasePath = Path.Combine(builder.Environment.ContentRootPath, "App_Data", "game2048.db");
+    connectionString = Game2048Model.GetDefaultConnectionString();
 }
 
-string databaseDirectory = Path.GetDirectoryName(databasePath) ?? builder.Environment.ContentRootPath;
-Directory.CreateDirectory(databaseDirectory);
-Game2048Model.ConfigurePersistence(databasePath);
+Game2048Model.ConfigurePersistence(connectionString);
 Game2048Model.EnsureDatabaseReady();
 Game2048Model.ConfigureGeneratedTileValue(builder.Configuration["Game2048:ForcedGeneratedTileValue"]);
 Game2048Model.ConfigureLeaderboardWallUrl(builder.Configuration["Game2048:LeaderboardWallUrl"]);
