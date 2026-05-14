@@ -2,7 +2,7 @@
 功能: 查询 2048 游戏
 
   场景: 首次 GET /api/games/{id} 会返回一个新的游戏状态且不会创建存档
-    当GET "/api/games/legacy-e2e-game"
+    当GET "/api/games/initial-e2e-game"
     那么response should be:
       """
       : {

@@ -223,7 +223,7 @@ public class Game2048
             context.SaveChanges();
         }
 
-        string message = playerNameToRecord + " scored " + myScore + " points in LEGACY 2048!";
+        string message = playerNameToRecord + " scored " + myScore + " points in Game2048!";
         HttpClient client = new HttpClient();
         client.Timeout = TimeSpan.FromSeconds(3);
         HttpResponseMessage response = client.PostAsync(
