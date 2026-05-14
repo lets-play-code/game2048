@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.game2048.entity.ExistingGameSeed;
 import org.game2048.entity.LeaderboardEntryRow;
+import org.game2048.entity.NextGameIdSeed;
 import org.game2048.entity.SavedGameRow;
 
 import javax.persistence.EntityManager;
@@ -54,12 +55,13 @@ public class Factories {
 
     @Bean
     public JFactory factorySet(JPADataRepository jpaDataRepository, Game2048AppRuntime game2048AppRuntime) {
-                return new EntityFactory(
-                        new CompositeDataRepository(new MemoryDataRepository())
-                                .registerByType(ExistingGameSeed.class, new ExistingGameSeedRepository(game2048AppRuntime))
-                                .registerByType(LeaderboardEntryRow.class, jpaDataRepository)
-                                .registerByType(SavedGameRow.class, jpaDataRepository)
-                );
+        return new EntityFactory(
+                new CompositeDataRepository(new MemoryDataRepository())
+                        .registerByType(ExistingGameSeed.class, new ExistingGameSeedRepository(game2048AppRuntime))
+                        .registerByType(NextGameIdSeed.class, new NextGameIdSeedRepository(game2048AppRuntime))
+                        .registerByType(LeaderboardEntryRow.class, jpaDataRepository)
+                        .registerByType(SavedGameRow.class, jpaDataRepository)
+        );
     }
 
     @SneakyThrows

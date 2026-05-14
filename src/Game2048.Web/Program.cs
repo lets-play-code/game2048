@@ -22,6 +22,7 @@ Game2048Model.ConfigureLeaderboardWallUrl(builder.Configuration["Game2048:Leader
 
 var app = builder.Build();
 var games = new ConcurrentDictionary<string, Game2048Model>();
+var controlledGameIds = new ConcurrentQueue<string>();
 bool enableTestApi = builder.Configuration.GetValue<bool>("Game2048:EnableTestApi");
 
 app.UseDefaultFiles();
@@ -32,7 +33,9 @@ app.MapGet("/api/saves", () => Results.Ok(Game2048Model.getSaveSummaries()));
 
 app.MapPost("/api/games", () =>
 {
-    string id = Guid.NewGuid().ToString("N");
+    string id = controlledGameIds.TryDequeue(out string controlledId)
+        ? controlledId
+        : Guid.NewGuid().ToString("N");
     Game2048Model game2048 = new Game2048Model();
     games[id] = game2048;
     return Results.Ok(new GameCreatedResponse(id, game2048.getGameState()));
@@ -133,6 +136,17 @@ app.MapPost("/api/games/{id}/leaderboard", (string id, SaveLeaderboardRecordRequ
 
 if (enableTestApi)
 {
+    app.MapPost("/api/test/games/next-id", (ControlledGameIdRequest request) =>
+    {
+        if (string.IsNullOrWhiteSpace(request.Id))
+        {
+            return Results.BadRequest(new ErrorResponse("Game id is required."));
+        }
+
+        controlledGameIds.Enqueue(request.Id);
+        return Results.NoContent();
+    });
+
     app.MapPost("/api/test/generated-tile-value", (GeneratedTileValueRequest request) =>
     {
         try
@@ -149,6 +163,7 @@ if (enableTestApi)
     app.MapPost("/api/test/games/clear-cache", () =>
     {
         games.Clear();
+        controlledGameIds.Clear();
         return Results.NoContent();
     });
 
@@ -187,6 +202,7 @@ app.Run();
 
 public record MoveRequest(string Direction);
 public record SaveLeaderboardRecordRequest(string PlayerName);
+public record ControlledGameIdRequest(string Id);
 public record GeneratedTileValueRequest(string Value);
 public record SeedExistingGameRequest(string BoardJson, int Score, bool Win, bool Lose, bool ScoreRecorded, bool LeakedShouldAddTile);
 public record ErrorResponse(string Error);
