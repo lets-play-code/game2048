@@ -4,9 +4,9 @@ using Xunit;
 
 namespace Game2048.Tests;
 
-public class Game2048LegacyBehaviorTest
+public class Game2048KnownBehaviorTest
 {
-    [Fact(Skip = "legacy practice fixture")]
+    [Fact(Skip = "Known behavior fixture")]
     public void invalid_repeat_move_after_a_real_move_can_still_grow_the_board()
     {
         Game2048Class game2048 = new Game2048Class();
@@ -28,7 +28,7 @@ public class Game2048LegacyBehaviorTest
         Assert.NotEqual(boardBeforeInvalidMove, string.Join(",", GetTileValues(game2048)));
     }
 
-    [Fact(Skip = "legacy practice fixture")]
+    [Fact(Skip = "Known behavior fixture")]
     public void tile_generation_can_replace_a_number_instead_of_using_the_only_empty_cell()
     {
         bool overwriteObserved = false;
@@ -50,7 +50,7 @@ public class Game2048LegacyBehaviorTest
         Assert.True(overwriteObserved);
     }
 
-    [Fact(Skip = "legacy practice fixture")]
+    [Fact(Skip = "Known behavior fixture")]
     public void some_stuck_boards_do_not_flip_to_lose()
     {
         Game2048Class game2048 = new Game2048Class();

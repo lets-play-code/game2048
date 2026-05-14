@@ -5,7 +5,7 @@
     当POST "/api/games/lazy-move-game/move":
       """
       {
-        "direction": "legacy"
+        "direction": "noop"
       }
       """
     那么response should be:
