@@ -89,16 +89,15 @@
           tilesMargin= 16
           overlay= false
           messages= []
-          tiles.size= 16
+          tiles: {
+            size= 16
+            value[]= +['' '' '' ''
+                       '' '' '' ''
+                       '' '' '' ''
+                       '' '' '2' '2']
+          }
         }
       }
-      """
-    那么response should be:
-      """
-      body.json.tiles.value[]= +['' '' '' ''
-                                 '' '' '' ''
-                                 '' '' '' ''
-                                 '' '' '2' '2']
       """
 
   场景: POST /api/games/{id}/load/{slotKey} 会为不存在的 id 懒创建游戏并加载手动槽位
@@ -143,16 +142,15 @@
           tilesMargin= 16
           overlay= true
           messages.size= 32
-          tiles.size= 16
+          tiles: {
+            size= 16
+            value[]= ['1024' '1024' '' ''
+                      '' '' '' ''
+                      '' '' '' ''
+                      '' '' '' '']
+          }
         }
       }
-      """
-    那么response should be:
-      """
-      body.json.tiles.value[]= ['1024' '1024' '' ''
-                                '' '' '' ''
-                                '' '' '' ''
-                                '' '' '' '']
       """
     那么所有"存档记录"应为:
       """
@@ -226,16 +224,15 @@
           tilesMargin= 16
           overlay= false
           messages= []
-          tiles.size= 16
+          tiles: {
+            size= 16
+            value[]= ['2' '4' '' ''
+                      '' '' '' ''
+                      '' '' '' '16'
+                      '' '' '' '']
+          }
         }
       }
-      """
-    那么response should be:
-      """
-      body.json.tiles.value[]= ['2' '4' '' ''
-                                '' '' '' ''
-                                '' '' '' '16'
-                                '' '' '' '']
       """
     那么所有"存档记录"应为:
       """
@@ -276,14 +273,13 @@
           tilesMargin= 16
           overlay= false
           messages= []
-          tiles.size= 16
+          tiles: {
+            size= 16
+            value[]= ['2' '4' '' ''
+                      '' '' '' ''
+                      '' '' '' '16'
+                      '' '' '' '']
+          }
         }
       }
-      """
-    那么response should be:
-      """
-      body.json.tiles.value[]= ['2' '4' '' ''
-                                '' '' '' ''
-                                '' '' '' '16'
-                                '' '' '' '']
       """

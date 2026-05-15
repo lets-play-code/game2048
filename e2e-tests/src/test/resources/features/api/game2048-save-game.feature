@@ -41,16 +41,15 @@
           tilesMargin= 16
           overlay= false
           messages= []
-          tiles.size= 16
+          tiles: {
+            size= 16
+            value[]= +['' '' '' ''
+                       '' '' '' ''
+                       '' '' '' ''
+                       '' '' '2' '2']
+          }
         }
       }
-      """
-    那么response should be:
-      """
-      body.json.tiles.value[]= +['' '' '' ''
-                                 '' '' '' ''
-                                 '' '' '' ''
-                                 '' '' '2' '2']
       """
     那么所有"存档记录"应为:
       """
@@ -107,16 +106,15 @@
           tilesMargin= 16
           overlay= true
           messages.size= 32
-          tiles.size= 16
+          tiles: {
+            size= 16
+            value[]= ['1024' '1024' '' ''
+                      '' '' '' ''
+                      '' '' '' ''
+                      '' '' '' '']
+          }
         }
       }
-      """
-    那么response should be:
-      """
-      body.json.tiles.value[]= ['1024' '1024' '' ''
-                                '' '' '' ''
-                                '' '' '' ''
-                                '' '' '' '']
       """
     那么所有"存档记录"应为:
       """
@@ -190,16 +188,15 @@
           tilesMargin= 16
           overlay= false
           messages= []
-          tiles.size= 16
+          tiles: {
+            size= 16
+            value[]= ['' '' '4' ''
+                      '' '' '' ''
+                      '' '' '' ''
+                      '' '' '' '']
+          }
         }
       }
-      """
-    那么response should be:
-      """
-      body.json.tiles.value[]= ['' '' '4' ''
-                                '' '' '' ''
-                                '' '' '' ''
-                                '' '' '' '']
       """
     那么所有"存档记录"应为:
       """
