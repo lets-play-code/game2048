@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Text.Json;
 using Game2048Model = Game2048.Game.Game2048;
 using Game2048StateModel = Game2048.Game.Game2048State;
@@ -21,9 +22,33 @@ Game2048Model.ConfigureGeneratedTileValue(builder.Configuration["Game2048:Forced
 Game2048Model.ConfigureLeaderboardWallUrl(builder.Configuration["Game2048:LeaderboardWallUrl"]);
 
 var app = builder.Build();
+ILogger requestLogger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("LegacyRequestLogging");
 var games = new ConcurrentDictionary<string, Game2048Model>();
 var controlledGameIds = new ConcurrentQueue<string>();
 bool enableTestApi = builder.Configuration.GetValue<bool>("Game2048:EnableTestApi");
+
+app.Use(async (context, next) =>
+{
+    string method = context.Request.Method;
+    string path = context.Request.Path.HasValue ? context.Request.Path.Value! : "/";
+    string queryString = context.Request.QueryString.HasValue ? context.Request.QueryString.Value! : string.Empty;
+    long startTimestamp = Stopwatch.GetTimestamp();
+
+    try
+    {
+        await next();
+    }
+    finally
+    {
+        requestLogger.LogInformation(
+            "LegacyRequest {Method} {Path}{QueryString} => {StatusCode} ({ElapsedMilliseconds:0.0} ms)",
+            method,
+            path,
+            queryString,
+            context.Response.StatusCode,
+            Stopwatch.GetElapsedTime(startTimestamp).TotalMilliseconds);
+    }
+});
 
 app.UseDefaultFiles();
 app.UseStaticFiles();

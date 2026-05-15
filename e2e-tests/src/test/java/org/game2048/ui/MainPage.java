@@ -29,4 +29,9 @@ public class MainPage extends AbstractPanel<Element> {
         return locate("css[.board .tile]").list().collect().stream().map(PlaywrightElement::text).toList();
     }
 
+    public MainPage right() {
+        perform("caption[→].click");
+        return this;
+    }
+
 }

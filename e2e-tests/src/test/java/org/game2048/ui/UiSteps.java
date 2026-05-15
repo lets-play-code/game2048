@@ -3,7 +3,6 @@ package org.game2048.ui;
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import io.cucumber.java.After;
-import io.cucumber.java.Before;
 import io.cucumber.java.zh_cn.那么;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.testcharm.jfactory.JFactory;
@@ -26,7 +25,7 @@ public class UiSteps {
     @Autowired
     private JFactory jFactory;
 
-    @Before("@ui")
+    //    @Before("@ui")
     public void open() {
         browser.launchByUrl("");
         Page page = browser.getPage();
@@ -39,6 +38,7 @@ public class UiSteps {
 
     @那么("用户应该:")
     public void 用户应该(String expression) {
+        open();
         mainPage.should(expression);
     }
 

@@ -28,3 +28,48 @@
         }
       }
       """
+
+  场景: right 且棋盘已右对齐时保持棋盘不变并刷新 auto 存档
+    假如存在"下一个新游戏标识":
+      """
+      gameId: ui-created-game
+      """
+    当用户应该:
+      """
+      newGame: {...}
+      """
+    假如存在"已存在的游戏":
+      """
+      gameId: ui-created-game
+      score: 5
+      boardJson: '["","2","4","8","","","","","","","","","","","",""]'
+      """
+    当用户应该:
+      """
+      : {
+        right::eventually: {
+          score: 'Score: 5',
+          board= ['' '2' '4' '8'
+                 '' '' '' ''
+                 '' '' '' ''
+                 '' '' '' '']
+        }
+      }
+      """
+    那么所有"存档记录"应为:
+      """
+      = [{
+        id= *
+        slotKey: "auto"
+        boardJson.json: ['' '2' '4' '8'
+                         '' '' '' ''
+                         '' '' '' ''
+                         '' '' '' '']
+        score: 5
+        win: false
+        lose: false
+        scoreRecorded: false
+        leakedShouldAddTile: false
+        savedAtUtc= *
+      }]
+      """
