@@ -47,10 +47,10 @@
       """
     那么response should be:
       """
-      (+body.json.tiles.value[])= ['' '' '' ''
-                                   '' '' '' ''
-                                   '' '' '' ''
-                                   '' '' '2' '2']
+      body.json.tiles.value[]= +['' '' '' ''
+                                 '' '' '' ''
+                                 '' '' '' ''
+                                 '' '' '2' '2']
       """
     那么所有"存档记录"应为:
       """
@@ -75,7 +75,12 @@
       win: true
       scoreRecorded: true
       leakedShouldAddTile: true
-      boardJson: '["1024","1024","","","","","","","","","","","","","",""]'
+      boardJson: ```
+                 ["1024","1024","","",\
+                  "","","","",\
+                  "","","","",\
+                  "","","",""]
+                 ```
       """
     当POST "/api/games/recorded-winning-save-game/save/slot2":
       """
@@ -137,11 +142,29 @@
       gameId: overwrite-save-game
       score: 7
       leakedShouldAddTile: true
-      boardJson: '["","","4","","","","","","","","","","","","",""]'
+      boardJson: ```
+                 ["","","4","",\
+                  "","","","",\
+                  "","","","",\
+                  "","","",""]
+                 ```
       """
     假如存在"存档记录":
-      | slotKey | boardJson                             | score | win  | lose  | scoreRecorded | leakedShouldAddTile | savedAtUtc           |
-      | slot2   | '["2","2","","","","","","","","","","","","","",""]' | 999   | true | false | true          | false               | 2026-01-01T00:00:00Z |
+      """
+      slotKey: "slot2"
+      boardJson: ```
+                 ["2","2","","",\
+                  "","","","",\
+                  "","","","",\
+                  "","","",""]
+                 ```
+      score: 999
+      win: true
+      lose: false
+      scoreRecorded: true
+      leakedShouldAddTile: false
+      savedAtUtc: '2026-01-01T00:00:00Z'
+      """
     当POST "/api/games/overwrite-save-game/save/slot2":
       """
       {}

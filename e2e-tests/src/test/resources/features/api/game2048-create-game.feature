@@ -41,7 +41,10 @@
       """
     那么response should be:
       """
-      (+body.json.state.tiles.value[])= ['' '' '' '' '' '' '' '' '' '' '' '' '' '' '2' '2']
+      body.json.state.tiles.value[]= +['' '' '' ''
+                                       '' '' '' ''
+                                       '' '' '' ''
+                                       '' '' '2' '2']
       """
 
   场景: POST /api/games 在 cucumber 测试中使用场景指定的 id 创建游戏
@@ -88,5 +91,8 @@
       """
     那么response should be:
       """
-      (+body.json.state.tiles.value[])= ['' '' '' '' '' '' '' '' '' '' '' '' '' '' '2' '2']
+      body.json.state.tiles.value[]= +['' '' '' ''
+                                       '' '' '' ''
+                                       '' '' '' ''
+                                       '' '' '2' '2']
       """
