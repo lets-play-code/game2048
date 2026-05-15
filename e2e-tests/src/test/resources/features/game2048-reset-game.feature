@@ -27,16 +27,15 @@
           tilesMargin= 16
           overlay= false
           messages= []
-          tiles.size= 16
+          tiles: {
+            size= 16
+            value[]= +['' '' '' ''
+                       '' '' '' ''
+                       '' '' '' ''
+                       '' '' '2' '2']
+          }
         }
       }
-      """
-    那么response should be:
-      """
-      body.json.tiles.value[]= +['' '' '' ''
-                                 '' '' '' ''
-                                 '' '' '' ''
-                                 '' '' '2' '2']
       """
     那么所有"存档记录"应为:
       """
@@ -82,16 +81,15 @@
           tilesMargin= 16
           overlay= false
           messages= []
-          tiles.size= 16
+          tiles: {
+            size= 16
+            value[]= +['' '' '' ''
+                       '' '' '' ''
+                       '' '' '' ''
+                       '' '' '2' '2']
+          }
         }
       }
-      """
-    那么response should be:
-      """
-      body.json.tiles.value[]= +['' '' '' ''
-                                 '' '' '' ''
-                                 '' '' '' ''
-                                 '' '' '2' '2']
       """
     那么所有"存档记录"应为:
       """

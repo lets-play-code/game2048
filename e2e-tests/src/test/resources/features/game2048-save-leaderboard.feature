@@ -81,12 +81,14 @@
       """
       : {
         code= 200
-        body.json.score= 64
-        body.json.win= false
-        body.json.lose= true
-        body.json.gameOver= true
-        body.json.canSaveRecord= false
-        body.json.recordSaved= true
+        body.json: {
+          score= 64
+          win= false
+          lose= true
+          gameOver= true
+          canSaveRecord= false
+          recordSaved= true
+        }
       }
       """
     那么所有"排行榜记录"应为:
@@ -135,12 +137,14 @@
       """
       : {
         code= 200
-        body.json.score= 256
-        body.json.win= true
-        body.json.lose= false
-        body.json.gameOver= true
-        body.json.canSaveRecord= false
-        body.json.recordSaved= true
+        body.json: {
+          score= 256
+          win= true
+          lose= false
+          gameOver= true
+          canSaveRecord= false
+          recordSaved= true
+        }
       }
       """
     那么所有"排行榜记录"应为:
@@ -188,12 +192,14 @@
       """
       : {
         code= 200
-        body.json.score= 128
-        body.json.win= false
-        body.json.lose= true
-        body.json.gameOver= true
-        body.json.canSaveRecord= false
-        body.json.recordSaved= true
+        body.json: {
+          score= 128
+          win= false
+          lose= true
+          gameOver= true
+          canSaveRecord= false
+          recordSaved= true
+        }
       }
       """
     那么所有"排行榜记录"应为:
@@ -293,11 +299,13 @@
       """
       : {
         code= 200
-        body.json.score= 200
-        body.json.win= false
-        body.json.lose= true
-        body.json.gameOver= true
-        body.json.canSaveRecord= true
-        body.json.recordSaved= false
+        body.json: {
+          score= 200
+          win= false
+          lose= true
+          gameOver= true
+          canSaveRecord= true
+          recordSaved= false
+        }
       }
       """
