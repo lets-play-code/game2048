@@ -1,5 +1,7 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
+using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Hosting.Server.Features;
 using Game2048Model = Game2048.Game.Game2048;
 using Game2048StateModel = Game2048.Game.Game2048State;
 
@@ -14,6 +16,7 @@ if (string.IsNullOrWhiteSpace(databasePath))
 {
     databasePath = Path.Combine(builder.Environment.ContentRootPath, "App_Data", "game2048.db");
 }
+string listeningUrlFilePath = builder.Configuration["Game2048:PortFilePath"];
 
 string databaseDirectory = Path.GetDirectoryName(databasePath) ?? builder.Environment.ContentRootPath;
 Directory.CreateDirectory(databaseDirectory);
@@ -185,7 +188,23 @@ if (enableTestApi)
 
 app.MapFallbackToFile("index.html");
 
-app.Run();
+if (string.IsNullOrWhiteSpace(listeningUrlFilePath))
+{
+    app.Run();
+}
+else
+{
+    string listeningUrlDirectory = Path.GetDirectoryName(listeningUrlFilePath) ?? builder.Environment.ContentRootPath;
+    Directory.CreateDirectory(listeningUrlDirectory);
+    if (File.Exists(listeningUrlFilePath))
+    {
+        File.Delete(listeningUrlFilePath);
+    }
+
+    await app.StartAsync();
+    await File.WriteAllTextAsync(listeningUrlFilePath, Program.GetListeningUrl(app));
+    await app.WaitForShutdownAsync();
+}
 
 public record MoveRequest(string Direction);
 public record SaveLeaderboardRecordRequest(string PlayerName);
@@ -193,4 +212,19 @@ public record GeneratedTileValueRequest(string Value);
 public record SeedExistingGameRequest(string BoardJson, int Score, bool Win, bool Lose, bool ScoreRecorded, bool LeakedShouldAddTile);
 public record ErrorResponse(string Error);
 public record GameCreatedResponse(string Id, Game2048StateModel State);
-public partial class Program { }
+public partial class Program
+{
+    internal static string GetListeningUrl(WebApplication app)
+    {
+        IServer server = app.Services.GetRequiredService<IServer>();
+        IServerAddressesFeature addressesFeature = server.Features.Get<IServerAddressesFeature>();
+        string listeningUrl = addressesFeature?.Addresses.FirstOrDefault(address => !address.EndsWith(":0", StringComparison.Ordinal))
+            ?? app.Urls.FirstOrDefault(address => !address.EndsWith(":0", StringComparison.Ordinal));
+        if (string.IsNullOrWhiteSpace(listeningUrl))
+        {
+            throw new InvalidOperationException("The web app did not publish a listening URL.");
+        }
+
+        return listeningUrl;
+    }
+}

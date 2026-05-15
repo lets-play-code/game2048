@@ -1,4 +1,6 @@
+using System.Diagnostics;
 using System.Net.Http.Json;
+using System.Text;
 using Microsoft.Data.Sqlite;
 using Xunit;
 
@@ -24,12 +26,131 @@ public class Game2048WebTest
             slot3 => AssertEmptySlot(slot3, "slot3"));
     }
 
+    [Fact]
+    public async Task configured_port_file_receives_dynamic_base_url_for_process_startup()
+    {
+        using Game2048PersistenceScope scope = new Game2048PersistenceScope();
+        string rootDirectory = Path.GetDirectoryName(scope.DatabasePath)!;
+        string baseUrlPath = Path.Combine(rootDirectory, "listening-url.txt");
+        StringBuilder processOutput = new StringBuilder();
+        using Process process = StartWebProcess(scope.DatabasePath, baseUrlPath, processOutput);
+
+        try
+        {
+            string baseUrl = await WaitForBaseUrlAsync(baseUrlPath, process, processOutput);
+            Uri uri = new Uri(baseUrl);
+
+            Assert.Equal("127.0.0.1", uri.Host);
+            Assert.NotEqual(0, uri.Port);
+
+            using HttpClient client = new HttpClient { BaseAddress = uri };
+            using HttpResponseMessage response = await client.GetAsync("/api/saves");
+            response.EnsureSuccessStatusCode();
+        }
+        finally
+        {
+            StopProcess(process);
+        }
+    }
+
     private static void AssertEmptySlot(SaveSummaryResponse slot, string slotKey)
     {
         Assert.Equal(slotKey, slot.SlotKey);
         Assert.False(slot.HasData);
         Assert.Null(slot.Score);
         Assert.Null(slot.SavedAtUtc);
+    }
+
+    private static Process StartWebProcess(string databasePath, string baseUrlPath, StringBuilder processOutput)
+    {
+        ProcessStartInfo startInfo = new ProcessStartInfo("dotnet")
+        {
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            WorkingDirectory = GetRepositoryRoot()
+        };
+        startInfo.ArgumentList.Add("run");
+        startInfo.ArgumentList.Add("--no-build");
+        startInfo.ArgumentList.Add("--project");
+        startInfo.ArgumentList.Add("src/Game2048.Web/Game2048.Web.csproj");
+        startInfo.Environment["ASPNETCORE_URLS"] = "http://127.0.0.1:0";
+        startInfo.Environment["Game2048__DatabasePath"] = databasePath;
+        startInfo.Environment["Game2048__PortFilePath"] = baseUrlPath;
+        startInfo.Environment["Logging__LogLevel__Default"] = "Warning";
+
+        Process process = new Process { StartInfo = startInfo };
+        process.OutputDataReceived += (_, args) =>
+        {
+            if (args.Data != null)
+            {
+                lock (processOutput)
+                {
+                    processOutput.AppendLine(args.Data);
+                }
+            }
+        };
+        process.ErrorDataReceived += (_, args) =>
+        {
+            if (args.Data != null)
+            {
+                lock (processOutput)
+                {
+                    processOutput.AppendLine(args.Data);
+                }
+            }
+        };
+
+        Assert.True(process.Start());
+        process.BeginOutputReadLine();
+        process.BeginErrorReadLine();
+        return process;
+    }
+
+    private static async Task<string> WaitForBaseUrlAsync(string baseUrlPath, Process process, StringBuilder processOutput)
+    {
+        for (int attempt = 0; attempt < 80; attempt++)
+        {
+            if (File.Exists(baseUrlPath))
+            {
+                string baseUrl = (await File.ReadAllTextAsync(baseUrlPath)).Trim();
+                if (!string.IsNullOrWhiteSpace(baseUrl))
+                {
+                    return baseUrl;
+                }
+            }
+
+            if (process.HasExited)
+            {
+                throw new InvalidOperationException($"The Game2048 web app exited early.\n{processOutput}");
+            }
+
+            await Task.Delay(250);
+        }
+
+        throw new InvalidOperationException($"The Game2048 web app did not write its base URL.\n{processOutput}");
+    }
+
+    private static void StopProcess(Process process)
+    {
+        if (process.HasExited)
+        {
+            return;
+        }
+
+        process.Kill(entireProcessTree: true);
+        process.WaitForExit(5000);
+    }
+
+    private static string GetRepositoryRoot()
+    {
+        DirectoryInfo current = new DirectoryInfo(AppContext.BaseDirectory);
+        while (!File.Exists(Path.Combine(current.FullName, "Game2048.sln")))
+        {
+            current = current.Parent ?? throw new DirectoryNotFoundException("Failed to locate the repository root.");
+        }
+
+        return current.FullName;
     }
 
 

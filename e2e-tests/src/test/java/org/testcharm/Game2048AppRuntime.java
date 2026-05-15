@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.net.ServerSocket;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -18,15 +17,17 @@ import java.util.concurrent.TimeUnit;
 public class Game2048AppRuntime {
     private final String dotnetCommand;
     private final Path databasePath;
+    private final Path baseUrlPath;
     private final String forcedGeneratedTileValue;
     private final String leaderboardWallUrl;
     private final Thread shutdownHook;
     private Process process;
-    private int port;
+    private String baseUrl;
 
     public Game2048AppRuntime(String dotnetCommand, String databasePath, String forcedGeneratedTileValue, String leaderboardWallUrl) {
         this.dotnetCommand = dotnetCommand;
         this.databasePath = Path.of(databasePath).toAbsolutePath();
+        this.baseUrlPath = buildBaseUrlPath(this.databasePath);
         this.forcedGeneratedTileValue = forcedGeneratedTileValue;
         this.leaderboardWallUrl = leaderboardWallUrl;
         this.shutdownHook = new Thread(this::stop, "game2048-e2e-runtime-shutdown");
@@ -39,12 +40,13 @@ public class Game2048AppRuntime {
         }
 
         try {
-            port = findAvailablePort();
             Files.createDirectories(this.databasePath.getParent());
-            File logFile = this.databasePath.resolveSibling("game2048.log").toFile();
+            File logFile = buildLogPath(this.databasePath).toFile();
             if (logFile.exists() && !logFile.delete()) {
                 throw new IOException("Failed to reset log file: " + logFile.getAbsolutePath());
             }
+            Files.deleteIfExists(baseUrlPath);
+            baseUrl = null;
 
             ProcessBuilder processBuilder = new ProcessBuilder(
                     dotnetCommand,
@@ -56,15 +58,16 @@ public class Game2048AppRuntime {
             processBuilder.directory(new File(System.getProperty("user.dir")));
             processBuilder.redirectErrorStream(true);
             processBuilder.redirectOutput(ProcessBuilder.Redirect.appendTo(logFile));
-            processBuilder.environment().put("ASPNETCORE_URLS", getBaseUrl());
+            processBuilder.environment().put("ASPNETCORE_URLS", "http://127.0.0.1:0");
             processBuilder.environment().put("Game2048__DatabasePath", databasePath.toString());
+            processBuilder.environment().put("Game2048__PortFilePath", baseUrlPath.toString());
             processBuilder.environment().put("Game2048__EnableTestApi", "true");
             processBuilder.environment().put("Game2048__LeaderboardWallUrl", leaderboardWallUrl);
             processBuilder.environment().put("Logging__LogLevel__Default", "Warning");
 
-            System.out.println("[INFO] Starting Game2048 web app on " + getBaseUrl());
+            System.out.println("[INFO] Starting Game2048 web app with a dynamic port");
             process = processBuilder.start();
-            waitUntilReady(logFile.toPath());
+            waitUntilReady(logFile.toPath(), baseUrlPath);
             applyConfiguredGeneratedTileValue();
         } catch (IOException e) {
             stop();
@@ -85,12 +88,16 @@ public class Game2048AppRuntime {
                 throw new IllegalStateException("Interrupted while stopping the Game2048 web app.", e);
             } finally {
                 process = null;
+                baseUrl = null;
             }
         }
     }
 
     public synchronized String getBaseUrl() {
-        return "http://127.0.0.1:" + port;
+        if (baseUrl == null || baseUrl.isBlank()) {
+            throw new IllegalStateException("The Game2048 web app base URL is unavailable.");
+        }
+        return baseUrl;
     }
 
     public synchronized Path getDatabasePath() {
@@ -127,28 +134,40 @@ public class Game2048AppRuntime {
         }
     }
 
-    private int findAvailablePort() throws IOException {
-        try (ServerSocket socket = new ServerSocket(0)) {
-            return socket.getLocalPort();
-        }
+    static Path buildLogPath(Path databasePath) {
+        String databaseFileName = databasePath.getFileName().toString();
+        int extensionIndex = databaseFileName.lastIndexOf('.');
+        String stem = extensionIndex > 0 ? databaseFileName.substring(0, extensionIndex) : databaseFileName;
+        return databasePath.resolveSibling(stem + ".log");
     }
 
-    private void waitUntilReady(Path logPath) {
+    static Path buildBaseUrlPath(Path databasePath) {
+        String databaseFileName = databasePath.getFileName().toString();
+        int extensionIndex = databaseFileName.lastIndexOf('.');
+        String stem = extensionIndex > 0 ? databaseFileName.substring(0, extensionIndex) : databaseFileName;
+        return databasePath.resolveSibling(stem + ".url");
+    }
+
+    private void waitUntilReady(Path logPath, Path baseUrlPath) {
         for (int attempt = 0; attempt < 80; attempt++) {
             if (process == null || !process.isAlive()) {
                 throw new IllegalStateException("The Game2048 web app exited before it became ready.\n" + readLog(logPath));
             }
 
-            try {
-                HttpURLConnection connection = (HttpURLConnection) new URL(getBaseUrl() + "/api/leaderboard").openConnection();
-                connection.setConnectTimeout(500);
-                connection.setReadTimeout(500);
-                connection.setRequestMethod("GET");
-                int responseCode = connection.getResponseCode();
-                if (responseCode >= 200 && responseCode < 500) {
-                    return;
+            String candidateBaseUrl = readBaseUrl(baseUrlPath);
+            if (candidateBaseUrl != null) {
+                baseUrl = candidateBaseUrl;
+                try {
+                    HttpURLConnection connection = (HttpURLConnection) new URL(candidateBaseUrl + "/api/leaderboard").openConnection();
+                    connection.setConnectTimeout(500);
+                    connection.setReadTimeout(500);
+                    connection.setRequestMethod("GET");
+                    int responseCode = connection.getResponseCode();
+                    if (responseCode >= 200 && responseCode < 500) {
+                        return;
+                    }
+                } catch (IOException ignored) {
                 }
-            } catch (IOException ignored) {
             }
 
             try {
@@ -160,6 +179,19 @@ public class Game2048AppRuntime {
         }
 
         throw new IllegalStateException("The Game2048 web app did not become ready in time.\n" + readLog(logPath));
+    }
+
+    private String readBaseUrl(Path baseUrlPath) {
+        try {
+            if (!Files.exists(baseUrlPath)) {
+                return null;
+            }
+
+            String detectedBaseUrl = Files.readString(baseUrlPath).trim();
+            return detectedBaseUrl.isBlank() ? null : detectedBaseUrl;
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to read the Game2048 web app base URL.", e);
+        }
     }
 
     private String readLog(Path logPath) {
