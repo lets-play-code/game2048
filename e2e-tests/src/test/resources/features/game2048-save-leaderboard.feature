@@ -26,7 +26,12 @@
       gameId: missing-player-name-game
       score: 32
       lose: true
-      boardJson: '["2","4","8","16","32","64","128","256","512","1024","2","4","8","16","32","64"]'
+      boardJson: ```
+                 ["2","4","8","16",\
+                  "32","64","128","256",\
+                  "512","1024","2","4",\
+                  "8","16","32","64"]
+                 ```
       """
     当POST "/api/games/missing-player-name-game/leaderboard":
       """
@@ -59,7 +64,12 @@
       gameId: blank-player-name-game
       score: 64
       lose: true
-      boardJson: '["2","4","8","16","32","64","128","256","512","1024","2","4","8","16","32","64"]'
+      boardJson: ```
+                 ["2","4","8","16",\
+                  "32","64","128","256",\
+                  "512","1024","2","4",\
+                  "8","16","32","64"]
+                 ```
       """
     当POST "/api/games/blank-player-name-game/leaderboard":
       """
@@ -108,7 +118,12 @@
       score: 256
       win: true
       leakedShouldAddTile: true
-      boardJson: '["1024","1024","","","","","","","","","","","","","",""]'
+      boardJson: ```
+                 ["1024","1024","","",\
+                  "","","","",\
+                  "","","","",\
+                  "","","",""]
+                 ```
       """
     当POST "/api/games/better-score-game/leaderboard":
       """
@@ -156,7 +171,12 @@
       gameId: lower-score-game
       score: 128
       lose: true
-      boardJson: '["2","4","8","16","32","64","128","256","512","1024","2","4","8","16","32","64"]'
+      boardJson: ```
+                 ["2","4","8","16",\
+                  "32","64","128","256",\
+                  "512","1024","2","4",\
+                  "8","16","32","64"]
+                 ```
       """
     当POST "/api/games/lower-score-game/leaderboard":
       """
@@ -197,7 +217,12 @@
       win: true
       scoreRecorded: true
       leakedShouldAddTile: true
-      boardJson: '["1024","1024","","","","","","","","","","","","","",""]'
+      boardJson: ```
+                 ["1024","1024","","",\
+                  "","","","",\
+                  "","","","",\
+                  "","","",""]
+                 ```
       """
     当POST "/api/games/already-recorded-game/leaderboard":
       """
@@ -237,7 +262,12 @@
       gameId: wall-failure-game
       score: 200
       lose: true
-      boardJson: '["2","4","8","16","32","64","128","256","512","1024","2","4","8","16","32","64"]'
+      boardJson: ```
+                 ["2","4","8","16",\
+                  "32","64","128","256",\
+                  "512","1024","2","4",\
+                  "8","16","32","64"]
+                 ```
       """
     当POST "/api/games/wall-failure-game/leaderboard":
       """

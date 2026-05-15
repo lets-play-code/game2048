@@ -35,7 +35,10 @@
       """
     那么response should be:
       """
-      (+body.json.tiles.value[])= ['' '' '' '' '' '' '' '' '' '' '' '' '' '' '2' '2']
+      body.json.tiles.value[]= +['' '' '' ''
+                                 '' '' '' ''
+                                 '' '' '' ''
+                                 '' '' '2' '2']
       """
 
   场景: GET /api/games/{id} 返回一个已存在的游戏状态
@@ -47,7 +50,12 @@
       lose: false
       scoreRecorded: false
       leakedShouldAddTile: false
-      boardJson: '["2","4","","","","","","","","","","16","","","",""]'
+      boardJson: ```
+                 ["2","4","","",\
+                  "","","","",\
+                  "","","","16",\
+                  "","","",""]
+                 ```
       """
     当GET "/api/games/seeded-existing-game"
     那么response should be:
@@ -77,5 +85,8 @@
       """
     那么response should be:
       """
-      body.json.tiles.value[]= ['2' '4' '' '' '' '' '' '' '' '' '' '16' '' '' '' '']
+      body.json.tiles.value[]= ['2' '4' '' ''
+                                '' '' '' ''
+                                '' '' '' '16'
+                                '' '' '' '']
       """

@@ -3,8 +3,21 @@
 
   场景: POST /api/games/{id}/load/{slotKey} 在 slotKey 非法时返回 400 且不修改存档
     假如存在"存档记录":
-      | slotKey | boardJson                                                           | score | win   | lose  | scoreRecorded | leakedShouldAddTile | savedAtUtc           |
-      | slot1   | ["2","4","","","","","","","","","","16","","","",""]              | 32    | false | false | false         | false               | 2026-01-01T00:00:00Z |
+      """
+      slotKey: "slot1"
+      boardJson: ```
+                 ["2","4","","",\
+                  "","","","",\
+                  "","","","16",\
+                  "","","",""]
+                 ```
+      score: 32
+      win: false
+      lose: false
+      scoreRecorded: false
+      leakedShouldAddTile: false
+      savedAtUtc: '2026-01-01T00:00:00Z'
+      """
     当POST "/api/games/invalid-load-game/load/slot9":
       """
       {}
@@ -82,16 +95,29 @@
       """
     那么response should be:
       """
-      (+body.json.tiles.value[])= ['' '' '' ''
-                                   '' '' '' ''
-                                   '' '' '' ''
-                                   '' '' '2' '2']
+      body.json.tiles.value[]= +['' '' '' ''
+                                 '' '' '' ''
+                                 '' '' '' ''
+                                 '' '' '2' '2']
       """
 
   场景: POST /api/games/{id}/load/{slotKey} 会为不存在的 id 懒创建游戏并加载手动槽位
     假如存在"存档记录":
-      | slotKey | boardJson                                                           | score | win  | lose  | scoreRecorded | leakedShouldAddTile | savedAtUtc           |
-      | slot2   | ["1024","1024","","","","","","","","","","","","","",""]           | 32    | true | false | true          | true                | 2026-02-02T00:00:00Z |
+      """
+      slotKey: "slot2"
+      boardJson: ```
+                 ["1024","1024","","",\
+                  "","","","",\
+                  "","","","",\
+                  "","","",""]
+                 ```
+      score: 32
+      win: true
+      lose: false
+      scoreRecorded: true
+      leakedShouldAddTile: true
+      savedAtUtc: '2026-02-02T00:00:00Z'
+      """
     当POST "/api/games/lazy-load-game/load/slot2":
       """
       {}
@@ -152,11 +178,29 @@
       gameId: overwrite-loaded-game
       score: 7
       leakedShouldAddTile: true
-      boardJson: '["","","4","","","","","","","","","","","","",""]'
+      boardJson: ```
+                 ["","","4","",\
+                  "","","","",\
+                  "","","","",\
+                  "","","",""]
+                 ```
       """
     假如存在"存档记录":
-      | slotKey | boardJson                                                           | score | win   | lose  | scoreRecorded | leakedShouldAddTile | savedAtUtc           |
-      | auto    | ["2","4","","","","","","","","","","16","","","",""]              | 32    | false | false | false         | false               | 2026-03-03T00:00:00Z |
+      """
+      slotKey: "auto"
+      boardJson: ```
+                 ["2","4","","",\
+                  "","","","",\
+                  "","","","16",\
+                  "","","",""]
+                 ```
+      score: 32
+      win: false
+      lose: false
+      scoreRecorded: false
+      leakedShouldAddTile: false
+      savedAtUtc: '2026-03-03T00:00:00Z'
+      """
     当POST "/api/games/overwrite-loaded-game/load/auto":
       """
       {}

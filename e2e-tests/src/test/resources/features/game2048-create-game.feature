@@ -41,5 +41,8 @@
       """
     那么response should be:
       """
-      (+body.json.state.tiles.value[])= ['' '' '' '' '' '' '' '' '' '' '' '' '' '' '2' '2']
+      body.json.state.tiles.value[]= +['' '' '' ''
+                                       '' '' '' ''
+                                       '' '' '' ''
+                                       '' '' '2' '2']
       """
