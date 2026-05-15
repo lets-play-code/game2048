@@ -34,4 +34,29 @@ public class MainPage extends AbstractPanel<Element> {
         return this;
     }
 
+    public MainPage left() {
+        perform("caption[←].click");
+        return this;
+    }
+
+    public MainPage up() {
+        perform("caption[↑].click");
+        return this;
+    }
+
+    public MainPage down() {
+        perform("caption[↓].click");
+        return this;
+    }
+
+    public MainPage slot1Save() {
+        locate("caption[Save]").list().getByIndex(0).click();
+        return this;
+    }
+
+    public MainPage autoLoad() {
+        locate("caption[Load]").list().getByIndex(0).click();
+        return this;
+    }
+
 }

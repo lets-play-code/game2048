@@ -166,6 +166,49 @@ public class Game2048WebTest
         Assert.Null(slot.SavedAtUtc);
     }
 
+    private static async Task<GameCreatedResponse> CreateGameAsync(HttpClient client)
+    {
+        HttpResponseMessage response = await client.PostAsync("/api/games", content: null);
+        response.EnsureSuccessStatusCode();
+        GameCreatedResponse created = await response.Content.ReadFromJsonAsync<GameCreatedResponse>();
+        Assert.NotNull(created);
+        return created;
+    }
+
+    private static async Task<GameStateResponse> MoveAsync(HttpClient client, string id, string direction)
+    {
+        HttpResponseMessage response = await client.PostAsJsonAsync($"/api/games/{id}/move", new { direction });
+        response.EnsureSuccessStatusCode();
+        GameStateResponse moved = await response.Content.ReadFromJsonAsync<GameStateResponse>();
+        Assert.NotNull(moved);
+        return moved;
+    }
+
+    private static string GetBoardSignature(GameStateResponse state)
+    {
+        return string.Join(",", state.Tiles.Select(tile => string.IsNullOrEmpty(tile.Value) ? "." : tile.Value));
+    }
+
+    public class GameCreatedResponse
+    {
+        public string Id { get; set; } = string.Empty;
+        public GameStateResponse State { get; set; } = new();
+    }
+
+    public class GameStateResponse
+    {
+        public int Score { get; set; }
+        public bool Win { get; set; }
+        public bool Lose { get; set; }
+        public bool RecordSaved { get; set; }
+        public List<TileResponse> Tiles { get; set; } = new();
+    }
+
+    public class TileResponse
+    {
+        public string Value { get; set; } = string.Empty;
+    }
+
 
     public class SaveSummaryResponse
     {
