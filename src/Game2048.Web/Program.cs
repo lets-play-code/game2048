@@ -110,10 +110,6 @@ app.MapPost("/api/games/{id}/save/{slotKey}", (string id, string slotKey) =>
         {
             return Results.BadRequest(new ErrorResponse(ex.Message));
         }
-        catch (InvalidOperationException ex)
-        {
-            return Results.BadRequest(new ErrorResponse(ex.Message));
-        }
     }
 });
 
