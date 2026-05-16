@@ -72,6 +72,29 @@ cd e2e-tests
 ./gradlew cucumber
 ```
 
+如需让 HTML 覆盖率报告启用 ReportGenerator license（例如方法级覆盖率细节），在运行前设置环境变量：
+
+```bash
+export REPORTGENERATOR_LICENSE='<your-license>'
+cd e2e-tests
+./gradlew cucumber
+```
+
+也支持仓库级别别名环境变量：
+
+```bash
+export GAME2048_REPORTGENERATOR_LICENSE='<your-license>'
+cd e2e-tests
+./gradlew cucumber
+```
+
+报告输出位置：
+
+```text
+e2e-tests/build/reports/coverage/backend-runtime.cobertura.xml
+e2e-tests/build/reports/coverage/backend-runtime-html/index.html
+```
+
 Windows：
 
 ```powershell

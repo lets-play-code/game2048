@@ -45,6 +45,9 @@ def backendCoverageRecorderDir = file("${buildDir}/backend-runtime-coverage/inst
 def backendCoverageOpenCoverReport = file("${buildDir}/reports/coverage/backend-runtime.xml")
 def backendCoverageReport = file("${buildDir}/reports/coverage/backend-runtime.cobertura.xml")
 def backendCoverageHtmlDir = file("${buildDir}/reports/coverage/backend-runtime-html")
+def backendCoverageSourceDir = file("${projectDir}/../src")
+def reportGeneratorLicenseProvider = providers.environmentVariable('GAME2048_REPORTGENERATOR_LICENSE')
+        .orElse(providers.environmentVariable('REPORTGENERATOR_LICENSE'))
 
 dependencies {
     testAnnotationProcessor('org.projectlombok:lombok:1.18.32')
@@ -134,8 +137,23 @@ task printBackendCoverageSummary {
     }
 }
 
-task generateBackendCoverageHtml(type: Exec) {
+task normalizeBackendCoverageReport {
     dependsOn printBackendCoverageSummary
+    doLast {
+        if (!backendCoverageReport.exists()) {
+            throw new GradleException("Backend C# runtime coverage report not found: ${backendCoverageReport}")
+        }
+
+        String coverageText = backendCoverageReport.getText('UTF-8')
+        String normalizedCoverageText = coverageText.replaceAll(/filename="\/([^"]+)"/, 'filename="$1"')
+        if (normalizedCoverageText != coverageText) {
+            backendCoverageReport.write(normalizedCoverageText, 'UTF-8')
+        }
+    }
+}
+
+task generateBackendCoverageHtml(type: Exec) {
+    dependsOn normalizeBackendCoverageReport
     commandLine 'dotnet',
             'tool',
             'run',
@@ -143,7 +161,14 @@ task generateBackendCoverageHtml(type: Exec) {
             '--',
             "-reports:${backendCoverageReport.absolutePath}",
             "-targetdir:${backendCoverageHtmlDir.absolutePath}",
+            "-sourcedirs:${backendCoverageSourceDir.absolutePath}",
             '-reporttypes:Html'
+    doFirst {
+        def reportGeneratorLicense = reportGeneratorLicenseProvider.orNull
+        if (reportGeneratorLicense != null && !reportGeneratorLicense.isBlank()) {
+            environment 'REPORTGENERATOR_LICENSE', reportGeneratorLicense
+        }
+    }
 }
 
 task cucumber(type: JavaExec) {
