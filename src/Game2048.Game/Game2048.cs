@@ -241,14 +241,6 @@ public class Game2048
         }
     }
 
-    public static int getPositionOfPlayer(string playerName)
-    {
-        string playerNameToFind = playerName ?? string.Empty;
-        List<LeaderboardEntry> entries = getLeaderboardEntries();
-        LeaderboardEntry entry = entries.FirstOrDefault(item => item.PlayerName.Equals(playerNameToFind, StringComparison.Ordinal));
-        return entry != null ? entry.Rank : entries.Count + 1;
-    }
-
     public void saveGame(string slotKey)
     {
         string normalizedSlotKey = normalizeSlotKey(slotKey);
@@ -539,23 +531,7 @@ public class Game2048
 
     private bool compare(Tile[] line1, Tile[] line2)
     {
-        if (line1 == line2)
-        {
-            return true;
-        }
-        else if (line1.Length != line2.Length)
-        {
-            return false;
-        }
-
-        for (int i = 0; i < line1.Length; i++)
-        {
-            if (!line1[i].Equals(line2[i]))
-            {
-                return false;
-            }
-        }
-        return true;
+        return line1 == line2 || line1.SequenceEqual(line2);
     }
 
     private Tile[] rotate(int angle)
@@ -728,10 +704,7 @@ public class Game2048
                 state.Messages.Add("Game over!");
                 state.Messages.Add("You lose!");
             }
-            if (myWin || myLose)
-            {
-                state.Messages.Add("Press ESC to play again");
-            }
+            state.Messages.Add("Press ESC to play again");
         }
         state.ScoreText = "Score: " + myScore;
         state.ScoreTextDrawCount++;
