@@ -23,8 +23,9 @@ testcharm:
     command: ${TESTCHARM_DOTNET_COMMAND:dotnet}
   game2048:
     database-path: ${TESTCHARM_GAME2048_DATABASE_PATH:${user.dir}/build/game2048-e2e.db}
+    coverage-recorder-directory: ${TESTCHARM_GAME2048_COVERAGE_RECORDER_DIRECTORY:}
+    coverage-report-path: ${TESTCHARM_GAME2048_COVERAGE_REPORT_PATH:}
     forced-tile-value: ${TESTCHARM_GAME2048_FORCED_TILE_VALUE:2}
 
 mock-server:
   endpoint: http://localhost:1081
-

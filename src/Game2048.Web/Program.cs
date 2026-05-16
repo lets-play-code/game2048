@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Text.Json;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.Extensions.Hosting;
 using Game2048Model = Game2048.Game.Game2048;
 using Game2048StateModel = Game2048.Game.Game2048State;
 
@@ -183,6 +184,12 @@ if (enableTestApi)
         {
             return Results.BadRequest(new ErrorResponse(ex.Message));
         }
+    });
+
+    app.MapPost("/api/test/shutdown", (IHostApplicationLifetime applicationLifetime) =>
+    {
+        applicationLifetime.StopApplication();
+        return Results.NoContent();
     });
 }
 

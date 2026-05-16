@@ -41,6 +41,11 @@ ext {
     set('jfactoryDal', '0.8.1-alpha.26')
 }
 
+def backendCoverageRecorderDir = file("${buildDir}/backend-runtime-coverage/instrumented")
+def backendCoverageOpenCoverReport = file("${buildDir}/reports/coverage/backend-runtime.xml")
+def backendCoverageReport = file("${buildDir}/reports/coverage/backend-runtime.cobertura.xml")
+def backendCoverageHtmlDir = file("${buildDir}/reports/coverage/backend-runtime-html")
+
 dependencies {
     testAnnotationProcessor('org.projectlombok:lombok:1.18.32')
     testImplementation('org.projectlombok:lombok:1.18.32')
@@ -61,21 +66,100 @@ dependencies {
     testImplementation 'org.mock-server:mockserver-netty:5.13.2'
 }
 
+task prepareDotnetTools(type: Exec) {
+    commandLine 'dotnet', 'tool', 'restore'
+}
+
 task prepareSut(type: Exec) {
+    dependsOn prepareDotnetTools
     commandLine 'dotnet', 'build', '../src/Game2048.Web/Game2048.Web.csproj', '--nologo'
 }
 
+task prepareBackendRuntimeCoverage(type: Exec) {
+    dependsOn prepareSut
+    commandLine 'dotnet',
+            'tool',
+            'run',
+            'altcover',
+            '--',
+            '--inputDirectory',
+            '../src/Game2048.Web/bin/Debug/net8.0',
+            '--outputDirectory',
+            backendCoverageRecorderDir.absolutePath,
+            '--report',
+            backendCoverageOpenCoverReport.absolutePath,
+            '--assemblyFilter',
+            'xunit',
+            '--assemblyFilter',
+            'testhost',
+            '--assemblyFilter',
+            'Microsoft.',
+            '--assemblyFilter',
+            'System.',
+            '--assemblyFilter',
+            'Newtonsoft.',
+            '--assemblyFilter',
+            'coverlet.',
+            '--assemblyFilter',
+            'AltCover.',
+            '--localSource',
+            '-q'
+    doFirst {
+        delete backendCoverageRecorderDir
+        delete backendCoverageOpenCoverReport
+        delete backendCoverageReport
+        delete backendCoverageHtmlDir
+    }
+}
+
+task printBackendCoverageSummary {
+    doLast {
+        if (!backendCoverageReport.exists()) {
+            throw new GradleException("Backend C# runtime coverage report not found: ${backendCoverageReport}")
+        }
+
+        def coverageText = backendCoverageReport.getText('UTF-8')
+        def matcher = coverageText =~ /<coverage\b[^>]*line-rate="([^"]+)"[^>]*branch-rate="([^"]+)"/
+        if (!matcher.find()) {
+            throw new GradleException("Failed to parse backend runtime coverage report header: ${backendCoverageReport}")
+        }
+
+        BigDecimal lineRate = new BigDecimal(matcher.group(1)) * 100
+        BigDecimal branchRate = new BigDecimal(matcher.group(2)) * 100
+        println String.format(
+                "[INFO] Backend C# runtime coverage: lines %.2f%%, branches %.2f%% (%s)",
+                lineRate,
+                branchRate,
+                backendCoverageReport)
+    }
+}
+
+task generateBackendCoverageHtml(type: Exec) {
+    dependsOn printBackendCoverageSummary
+    commandLine 'dotnet',
+            'tool',
+            'run',
+            'reportgenerator',
+            '--',
+            "-reports:${backendCoverageReport.absolutePath}",
+            "-targetdir:${backendCoverageHtmlDir.absolutePath}",
+            '-reporttypes:Html'
+}
+
 task cucumber(type: JavaExec) {
-    dependsOn prepareSut, assemble, testClasses
+    dependsOn prepareBackendRuntimeCoverage, assemble, testClasses
     main = "io.cucumber.core.cli.Main"
     classpath = configurations.cucumberRuntime + sourceSets.main.output + sourceSets.test.output
     environment "SPRING_PROFILES_ACTIVE", "test"
     environment "TESTCHARM_GAME2048_DATABASE_PATH", "${buildDir}/game2048-e2e-${UUID.randomUUID()}.db"
+    environment "TESTCHARM_GAME2048_COVERAGE_RECORDER_DIRECTORY", backendCoverageRecorderDir.absolutePath
+    environment "TESTCHARM_GAME2048_COVERAGE_REPORT_PATH", backendCoverageReport.absolutePath
     jvmArgs "-Dfile.encoding=UTF-8", "-Dsun.jnu.encoding=utf-8"
     args = ['--plugin', 'pretty',
             '--glue', 'org.testcharm',
             '--glue', 'com.github',
             project.hasProperty('file') ? project.file : 'src/test/resources/features']
+    finalizedBy generateBackendCoverageHtml
 }
 
 tasks.named("build") {

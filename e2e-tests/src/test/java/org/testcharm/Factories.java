@@ -24,11 +24,15 @@ public class Factories {
     public Game2048AppRuntime game2048AppRuntime(
             @Value("${testcharm.app.command:dotnet}") String dotnetCommand,
             @Value("${testcharm.game2048.database-path}") String databasePath,
+            @Value("${testcharm.game2048.coverage-recorder-directory:}") String coverageRecorderDirectory,
+            @Value("${testcharm.game2048.coverage-report-path:}") String coverageReportPath,
             @Value("${testcharm.game2048.forced-tile-value:}") String forcedTileValue,
             ClientAndServer mockServer) {
         return new Game2048AppRuntime(
                 dotnetCommand,
                 databasePath,
+                coverageRecorderDirectory,
+                coverageReportPath,
                 forcedTileValue,
                 "http://127.0.0.1:" + mockServer.getLocalPort() + "/api/wall");
     }

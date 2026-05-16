@@ -53,6 +53,23 @@ public class Game2048WebTest
         }
     }
 
+    [Fact]
+    public async Task test_shutdown_api_stops_process_gracefully()
+    {
+        using Game2048PersistenceScope scope = new Game2048PersistenceScope();
+        string rootDirectory = Path.GetDirectoryName(scope.DatabasePath)!;
+        string baseUrlPath = Path.Combine(rootDirectory, "listening-url.txt");
+        StringBuilder processOutput = new StringBuilder();
+        using Process process = StartWebProcess(scope.DatabasePath, baseUrlPath, processOutput, enableTestApi: true);
+
+        string baseUrl = await WaitForBaseUrlAsync(baseUrlPath, process, processOutput);
+        using HttpClient client = new HttpClient { BaseAddress = new Uri(baseUrl) };
+        using HttpResponseMessage response = await client.PostAsync("/api/test/shutdown", content: null);
+
+        Assert.Equal(System.Net.HttpStatusCode.NoContent, response.StatusCode);
+        Assert.True(process.WaitForExit(5000), processOutput.ToString());
+    }
+
     private static void AssertEmptySlot(SaveSummaryResponse slot, string slotKey)
     {
         Assert.Equal(slotKey, slot.SlotKey);
@@ -61,7 +78,7 @@ public class Game2048WebTest
         Assert.Null(slot.SavedAtUtc);
     }
 
-    private static Process StartWebProcess(string databasePath, string baseUrlPath, StringBuilder processOutput)
+    private static Process StartWebProcess(string databasePath, string baseUrlPath, StringBuilder processOutput, bool enableTestApi = false)
     {
         ProcessStartInfo startInfo = new ProcessStartInfo("dotnet")
         {
@@ -77,6 +94,7 @@ public class Game2048WebTest
         startInfo.Environment["ASPNETCORE_URLS"] = "http://127.0.0.1:0";
         startInfo.Environment["Game2048__DatabasePath"] = databasePath;
         startInfo.Environment["Game2048__PortFilePath"] = baseUrlPath;
+        startInfo.Environment["Game2048__EnableTestApi"] = enableTestApi ? "true" : "false";
         startInfo.Environment["Logging__LogLevel__Default"] = "Warning";
 
         Process process = new Process { StartInfo = startInfo };
