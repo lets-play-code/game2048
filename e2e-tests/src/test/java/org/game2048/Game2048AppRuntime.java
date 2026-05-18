@@ -13,15 +13,23 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class Game2048AppRuntime {
+    private static final String WEB_APP_PROJECT_PATH = "../src/Game2048.Web/Game2048.Web.csproj";
+    private static final String WEB_APP_CONTENT_ROOT_PATH = "../src/Game2048.Web";
+    private static final String WEB_APP_INSTRUMENTED_DLL_NAME = "Game2048.Web.dll";
+
     private final String dotnetCommand;
     private final String configuredBaseUrl;
     private final String connectionString;
     private final String jdbcUrl;
     private final String databaseUser;
     private final String databasePassword;
+    private final Path coverageRecorderDirectory;
+    private final Path coverageReportPath;
     private final String forcedGeneratedTileValue;
     private final String leaderboardWallUrl;
     private final Thread shutdownHook;
@@ -36,6 +44,8 @@ public class Game2048AppRuntime {
             String jdbcUrl,
             String databaseUser,
             String databasePassword,
+            String coverageRecorderDirectory,
+            String coverageReportPath,
             String forcedGeneratedTileValue,
             String leaderboardWallUrl) {
         this.dotnetCommand = dotnetCommand;
@@ -44,6 +54,8 @@ public class Game2048AppRuntime {
         this.jdbcUrl = jdbcUrl;
         this.databaseUser = databaseUser;
         this.databasePassword = databasePassword;
+        this.coverageRecorderDirectory = toCoveragePath(coverageRecorderDirectory, coverageReportPath);
+        this.coverageReportPath = toCoveragePath(coverageReportPath, coverageRecorderDirectory);
         this.forcedGeneratedTileValue = forcedGeneratedTileValue;
         this.leaderboardWallUrl = leaderboardWallUrl;
         this.shutdownHook = new Thread(this::stop, "game2048-e2e-runtime-shutdown");
@@ -74,17 +86,15 @@ public class Game2048AppRuntime {
                 throw new IOException("Failed to reset log file: " + logFile.getAbsolutePath());
             }
 
-            ProcessBuilder processBuilder = new ProcessBuilder(
+            ProcessBuilder processBuilder = new ProcessBuilder(buildStartCommand(
                     dotnetCommand,
-                    "run",
-                    "--no-build",
-                    "--no-launch-profile",
-                    "--project",
-                    "../src/Game2048.Web/Game2048.Web.csproj");
+                    coverageRecorderDirectory,
+                    coverageReportPath,
+                    buildWebAppContentRootPath()));
             processBuilder.directory(new File(System.getProperty("user.dir")));
             processBuilder.redirectErrorStream(true);
             processBuilder.redirectOutput(ProcessBuilder.Redirect.appendTo(logFile));
-            processBuilder.environment().put("ASPNETCORE_URLS", getBaseUrl());
+            processBuilder.environment().put("ASPNETCORE_URLS", buildListeningUrl(port));
             processBuilder.environment().put("Game2048__ConnectionString", connectionString);
             processBuilder.environment().put("Game2048__EnableTestApi", "true");
             processBuilder.environment().put("Game2048__LeaderboardWallUrl", leaderboardWallUrl);
@@ -106,9 +116,11 @@ public class Game2048AppRuntime {
         }
 
         if (process != null) {
-            process.destroy();
             try {
-                if (!process.waitFor(5, TimeUnit.SECONDS)) {
+                if (!waitForGracefulShutdown()) {
+                    process.destroy();
+                }
+                if (!process.waitFor(10, TimeUnit.SECONDS)) {
                     process.destroyForcibly();
                     process.waitFor(5, TimeUnit.SECONDS);
                 }
@@ -161,9 +173,66 @@ public class Game2048AppRuntime {
         }
     }
 
+    static List<String> buildStartCommand(
+            String dotnetCommand,
+            Path coverageRecorderDirectory,
+            Path coverageReportPath,
+            Path contentRootPath) {
+        boolean hasCoverageRecorderDirectory = coverageRecorderDirectory != null;
+        boolean hasCoverageReportPath = coverageReportPath != null;
+        if (hasCoverageRecorderDirectory != hasCoverageReportPath) {
+            throw new IllegalArgumentException("Both coverage recorder directory and coverage report path are required together.");
+        }
+
+        if (!hasCoverageRecorderDirectory) {
+            return List.of(
+                    dotnetCommand,
+                    "run",
+                    "--no-build",
+                    "--no-launch-profile",
+                    "--project",
+                    WEB_APP_PROJECT_PATH);
+        }
+
+        List<String> command = new ArrayList<>();
+        command.add(dotnetCommand);
+        command.add("tool");
+        command.add("run");
+        command.add("altcover");
+        command.add("--");
+        command.add("Runner");
+        command.add("--recorderDirectory");
+        command.add(coverageRecorderDirectory.toString());
+        command.add("--workingDirectory");
+        command.add(coverageRecorderDirectory.toString());
+        command.add("--executable");
+        command.add(dotnetCommand);
+        command.add("--cobertura");
+        command.add(coverageReportPath.toString());
+        command.add("--");
+        command.add(WEB_APP_INSTRUMENTED_DLL_NAME);
+        command.add("--contentRoot");
+        command.add(contentRootPath.toString());
+        return command;
+    }
+
     private int findAvailablePort() throws IOException {
         try (ServerSocket socket = new ServerSocket(0)) {
             return socket.getLocalPort();
+        }
+    }
+
+    private boolean waitForGracefulShutdown() {
+        if (process == null || !process.isAlive() || baseUrl == null || baseUrl.isBlank()) {
+            return false;
+        }
+
+        postJson("/api/test/shutdown", "{}");
+        try {
+            return process.waitFor(10, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Interrupted while waiting for graceful shutdown.", e);
         }
     }
 
@@ -239,5 +308,25 @@ public class Game2048AppRuntime {
 
     private boolean isExternallyManaged() {
         return configuredBaseUrl != null && !configuredBaseUrl.isBlank();
+    }
+
+    private static String buildListeningUrl(int port) {
+        return "http://0.0.0.0:" + port;
+    }
+
+    private static Path buildWebAppContentRootPath() {
+        return Path.of(System.getProperty("user.dir"))
+                .resolve(WEB_APP_CONTENT_ROOT_PATH)
+                .normalize()
+                .toAbsolutePath();
+    }
+
+    private static Path toCoveragePath(String value, String pairedValue) {
+        boolean hasValue = value != null && !value.isBlank();
+        boolean hasPairedValue = pairedValue != null && !pairedValue.isBlank();
+        if (hasValue != hasPairedValue) {
+            throw new IllegalArgumentException("Both coverage recorder directory and coverage report path are required together.");
+        }
+        return hasValue ? Path.of(value).toAbsolutePath() : null;
     }
 }

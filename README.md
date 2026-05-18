@@ -89,3 +89,10 @@ ASPNETCORE_URLS=http://127.0.0.1:5099 dotnet run --project src/Game2048.Web
 cd e2e-tests
 ./gradlew cucumber
 ```
+
+覆盖率报告输出到：
+
+```text
+e2e-tests/build/reports/coverage/backend-runtime.cobertura.xml
+e2e-tests/build/reports/coverage/backend-runtime-html/index.html
+```

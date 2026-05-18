@@ -41,6 +41,14 @@ ext {
     set('jfactoryDal', '1.0.0-alpha.21')
 }
 
+def backendCoverageRecorderDir = file("${buildDir}/backend-runtime-coverage/instrumented")
+def backendCoverageOpenCoverReport = file("${buildDir}/reports/coverage/backend-runtime.xml")
+def backendCoverageReport = file("${buildDir}/reports/coverage/backend-runtime.cobertura.xml")
+def backendCoverageHtmlDir = file("${buildDir}/reports/coverage/backend-runtime-html")
+def backendCoverageSourceDir = file("${projectDir}/../src")
+def reportGeneratorLicenseProvider = providers.environmentVariable('GAME2048_REPORTGENERATOR_LICENSE')
+        .orElse(providers.environmentVariable('REPORTGENERATOR_LICENSE'))
+
 dependencies {
     testAnnotationProcessor('org.projectlombok:lombok:1.18.32')
     testImplementation('org.projectlombok:lombok:1.18.32')
@@ -61,12 +69,113 @@ dependencies {
     testImplementation 'com.microsoft.playwright:playwright:1.50.0'
 }
 
+task prepareDotnetTools(type: Exec) {
+    commandLine 'dotnet', 'tool', 'restore'
+}
+
 task prepareSut(type: Exec) {
-    commandLine 'docker', 'compose', 'up', '-d', '--build'
+    commandLine 'docker', 'compose', 'up', '-d', '--build', 'mysql8', 'mockserver', 'playwright', 'web-driver'
+}
+
+task prepareBackend(type: Exec) {
+    commandLine 'dotnet', 'build', '../src/Game2048.Web/Game2048.Web.csproj', '--nologo'
+}
+
+task prepareBackendRuntimeCoverage(type: Exec) {
+    dependsOn prepareSut, prepareDotnetTools, prepareBackend
+    commandLine 'dotnet',
+            'tool',
+            'run',
+            'altcover',
+            '--',
+            '--inputDirectory',
+            '../src/Game2048.Web/bin/Debug/net8.0',
+            '--outputDirectory',
+            backendCoverageRecorderDir.absolutePath,
+            '--report',
+            backendCoverageOpenCoverReport.absolutePath,
+            '--assemblyFilter',
+            'xunit',
+            '--assemblyFilter',
+            'testhost',
+            '--assemblyFilter',
+            'Microsoft.',
+            '--assemblyFilter',
+            'System.',
+            '--assemblyFilter',
+            'Newtonsoft.',
+            '--assemblyFilter',
+            'coverlet.',
+            '--assemblyFilter',
+            'AltCover.',
+            '--localSource',
+            '-q'
+    doFirst {
+        delete backendCoverageRecorderDir
+        delete backendCoverageOpenCoverReport
+        delete backendCoverageReport
+        delete backendCoverageHtmlDir
+    }
+}
+
+task printBackendCoverageSummary {
+    doLast {
+        if (!backendCoverageReport.exists()) {
+            throw new GradleException("Backend C# runtime coverage report not found: ${backendCoverageReport}")
+        }
+
+        def coverageText = backendCoverageReport.getText('UTF-8')
+        def matcher = coverageText =~ /<coverage\b[^>]*line-rate="([^"]+)"[^>]*branch-rate="([^"]+)"/
+        if (!matcher.find()) {
+            throw new GradleException("Failed to parse backend runtime coverage report header: ${backendCoverageReport}")
+        }
+
+        BigDecimal lineRate = new BigDecimal(matcher.group(1)) * 100
+        BigDecimal branchRate = new BigDecimal(matcher.group(2)) * 100
+        println String.format(
+                "[INFO] Backend C# runtime coverage: lines %.2f%%, branches %.2f%% (%s)",
+                lineRate,
+                branchRate,
+                backendCoverageReport)
+    }
+}
+
+task normalizeBackendCoverageReport {
+    dependsOn printBackendCoverageSummary
+    doLast {
+        if (!backendCoverageReport.exists()) {
+            throw new GradleException("Backend C# runtime coverage report not found: ${backendCoverageReport}")
+        }
+
+        String coverageText = backendCoverageReport.getText('UTF-8')
+        String normalizedCoverageText = coverageText.replaceAll(/filename="\/([^"]+)"/, 'filename="$1"')
+        if (normalizedCoverageText != coverageText) {
+            backendCoverageReport.write(normalizedCoverageText, 'UTF-8')
+        }
+    }
+}
+
+task generateBackendCoverageHtml(type: Exec) {
+    dependsOn normalizeBackendCoverageReport
+    commandLine 'dotnet',
+            'tool',
+            'run',
+            'reportgenerator',
+            '--',
+            "-reports:${backendCoverageReport.absolutePath}",
+            "-targetdir:${backendCoverageHtmlDir.absolutePath}",
+            "-sourcedirs:${backendCoverageSourceDir.absolutePath}",
+            '-reporttypes:Html'
+    doFirst {
+        def reportGeneratorLicense = reportGeneratorLicenseProvider.orNull
+        if (reportGeneratorLicense != null && !reportGeneratorLicense.isBlank()) {
+            environment 'REPORTGENERATOR_LICENSE', reportGeneratorLicense
+        }
+    }
 }
 
 task cucumber(type: JavaExec) {
-    dependsOn prepareSut, assemble, testClasses
+    dependsOn prepareBackendRuntimeCoverage, assemble, testClasses
     main = "io.cucumber.core.cli.Main"
     classpath = configurations.cucumberRuntime + sourceSets.main.output + sourceSets.test.output
     environment "SPRING_PROFILES_ACTIVE", "test"
@@ -76,7 +185,9 @@ task cucumber(type: JavaExec) {
     environment "TESTCHARM_MYSQL_PASSWORD", "game2048"
     environment "TESTCHARM_GAME2048_DATABASE", "game2048_e2e"
     environment "TESTCHARM_MOCK_SERVER_ENDPOINT", "http://127.0.0.1:51081"
-    environment "TESTCHARM_GAME2048_BASE_URL", "http://127.0.0.1:5000"
+    environment "TESTCHARM_GAME2048_BASE_URL", ""
+    environment "TESTCHARM_GAME2048_COVERAGE_RECORDER_DIRECTORY", backendCoverageRecorderDir.absolutePath
+    environment "TESTCHARM_GAME2048_COVERAGE_REPORT_PATH", backendCoverageReport.absolutePath
     environment "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD", "1"
     jvmArgs "-Dfile.encoding=UTF-8", "-Dsun.jnu.encoding=utf-8"
     args = ['--plugin', 'pretty',
@@ -84,6 +195,11 @@ task cucumber(type: JavaExec) {
             '--glue', 'org.game2048',
             '--glue', 'com.github',
             project.hasProperty('file') ? project.file : 'src/test/resources/features']
+    finalizedBy generateBackendCoverageHtml
+}
+
+test {
+    useJUnitPlatform()
 }
 
 tasks.named("build") {

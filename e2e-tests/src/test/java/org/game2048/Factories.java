@@ -29,6 +29,8 @@ public class Factories {
             @Value("${testcharm.game2048.jdbc-url}") String jdbcUrl,
             @Value("${spring.datasource.username}") String databaseUser,
             @Value("${spring.datasource.password}") String databasePassword,
+            @Value("${testcharm.game2048.coverage-recorder-directory:}") String coverageRecorderDirectory,
+            @Value("${testcharm.game2048.coverage-report-path:}") String coverageReportPath,
             @Value("${testcharm.game2048.forced-tile-value:}") String forcedTileValue,
             @Value("${mock-server.endpoint}") String mockServerEndpoint) {
         URI endpoint = URI.create(mockServerEndpoint);
@@ -39,6 +41,8 @@ public class Factories {
                 jdbcUrl,
                 databaseUser,
                 databasePassword,
+                coverageRecorderDirectory,
+                coverageReportPath,
                 forcedTileValue,
                 endpoint.resolve("/api/wall").toString());
     }

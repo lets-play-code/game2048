@@ -157,6 +157,8 @@ app.MapPost("/api/games/{id}/leaderboard", (string id, SaveLeaderboardRecordRequ
 
 if (enableTestApi)
 {
+    IHostApplicationLifetime appLifetime = app.Lifetime;
+
     app.MapPost("/api/test/games/next-id", (ControlledGameIdRequest request) =>
     {
         if (string.IsNullOrWhiteSpace(request.Id))
@@ -179,6 +181,12 @@ if (enableTestApi)
         {
             return Results.BadRequest(new ErrorResponse(ex.Message));
         }
+    });
+
+    app.MapPost("/api/test/shutdown", () =>
+    {
+        Task.Run(appLifetime.StopApplication);
+        return Results.NoContent();
     });
 
     app.MapPost("/api/test/games/clear-cache", () =>

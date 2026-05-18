@@ -6,9 +6,12 @@ import com.microsoft.playwright.Playwright;
 import io.cucumber.java.Scenario;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.game2048.Game2048AppRuntime;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PreDestroy;
+import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
@@ -18,12 +21,14 @@ import java.util.Map;
 @Component
 public class PlaywrightBrowser {
     private static final String UPLOAD_AND_DOWNLOAD_DEFAULT_FOLDER = "/tmp/f2c/";
+    @Autowired
+    private Game2048AppRuntime appRuntime;
     private Playwright playwright;
     private com.microsoft.playwright.Browser browser;
     private Page page = null;
 
     public void launchByUrl(String path) {
-        getPage().navigate("http://web.net:5000" + path);
+        getPage().navigate(toBrowserAccessibleBaseUrl(appRuntime.getBaseUrl()) + path);
     }
 
     public void close(Scenario scenario) {
@@ -88,6 +93,19 @@ public class PlaywrightBrowser {
 
     private void createPlaywright() {
         if (playwright == null) playwright = Playwright.create();
+    }
+
+    static String toBrowserAccessibleBaseUrl(String baseUrl) {
+        URI uri = URI.create(baseUrl);
+        String host = uri.getHost();
+        if (!"127.0.0.1".equals(host) && !"localhost".equals(host)) {
+            return baseUrl;
+        }
+        String portPart = uri.getPort() == -1 ? "" : ":" + uri.getPort();
+        String pathPart = uri.getRawPath() == null ? "" : uri.getRawPath();
+        String queryPart = uri.getRawQuery() == null ? "" : "?" + uri.getRawQuery();
+        String fragmentPart = uri.getRawFragment() == null ? "" : "#" + uri.getRawFragment();
+        return uri.getScheme() + "://host.docker.internal" + portPart + pathPart + queryPart + fragmentPart;
     }
 
     @SneakyThrows
