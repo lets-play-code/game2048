@@ -16,7 +16,7 @@ internal sealed class Game2048PersistenceScope : IDisposable
 
     public Game2048PersistenceScope()
     {
-        DatabaseName = "game2048_tests_" + Guid.NewGuid().ToString("N");
+        DatabaseName = "g2048t_" + Guid.NewGuid().ToString("N")[..16];
         ConnectionString = BuildDatabaseConnectionString(DatabaseName);
     }
 

@@ -89,7 +89,7 @@ task prepareBackendRuntimeCoverage(type: Exec) {
             'altcover',
             '--',
             '--inputDirectory',
-            '../src/Game2048.Web/bin/Debug/net8.0',
+            '../src/Game2048.Web/bin/Debug/net10.0',
             '--outputDirectory',
             backendCoverageRecorderDir.absolutePath,
             '--report',
