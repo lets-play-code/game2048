@@ -1,0 +1,22 @@
+{
+  "folders": {
+    "items": {
+      "src": {},
+      "tests": {}
+    }
+  },
+  "packages": {
+    "Game2048.Game": {
+      "path": "src/Game2048.Game/Game2048.Game.abppkg",
+      "folder": "src"
+    },
+    "Game2048.Tests": {
+      "path": "tests/Game2048.Tests/Game2048.Tests.abppkg",
+      "folder": "tests"
+    },
+    "Game2048.Web": {
+      "path": "src/Game2048.Web/Game2048.Web.abppkg",
+      "folder": "src"
+    }
+  }
+}

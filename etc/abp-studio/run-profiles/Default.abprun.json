@@ -1,0 +1,15 @@
+{
+  "folders": {
+    "items": {
+      "Game2048": {}
+    }
+  },
+  "applications": {
+    "Game2048.Web": {
+      "type": "dotnet-project",
+      "path": "../../../src/Game2048.Web/Game2048.Web.csproj",
+      "folder": "Game2048",
+      "runnable": true
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": "13d76427-063b-4a60-b124-08bca2ef4811",
+  "template": "empty",
+  "modules": {
+    "Game2048": {
+      "path": "Game2048.abpmdl"
+    }
+  },
+  "runProfiles": {
+    "Default": {
+      "path": "etc/abp-studio/run-profiles/Default.abprun.json"
+    }
+  },
+  "defaultRunProfile": "Default"
+}

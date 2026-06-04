@@ -8,3 +8,7 @@ TestResults/
 .DS_Store
 .idea/
 App_Data
+
+
+# ABP Studio
+**/.abpstudio/
