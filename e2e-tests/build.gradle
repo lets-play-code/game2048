@@ -69,20 +69,7 @@ dependencies {
     testImplementation 'com.microsoft.playwright:playwright:1.50.0'
 }
 
-task prepareDotnetTools(type: Exec) {
-    commandLine 'dotnet', 'tool', 'restore'
-}
-
-task prepareSut(type: Exec) {
-    commandLine 'docker', 'compose', 'up', '-d', '--build', 'mysql8', 'mockserver', 'playwright', 'web-driver'
-}
-
-task prepareBackend(type: Exec) {
-    commandLine 'dotnet', 'build', '../src/Game2048.Web/Game2048.Web.csproj', '--nologo'
-}
-
 task prepareBackendRuntimeCoverage(type: Exec) {
-    dependsOn prepareSut, prepareDotnetTools, prepareBackend
     commandLine 'dotnet',
             'tool',
             'run',
