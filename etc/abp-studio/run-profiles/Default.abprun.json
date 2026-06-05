@@ -9,16 +9,7 @@
       "type": "dotnet-project",
       "path": "../../../src/Game2048.Web/Game2048.Web.csproj",
       "folder": "Game2048",
-      "runnable": true,
-      "env": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
-        "Game2048__EnableTestApi": "true"
-      },
-      "kubernetesService": null,
-      "launchUrl": null,
-      "healthCheckEndpoint": "",
-      "healthUiEndpoint": "",
-      "openBrowserOnStart": false
+      "runnable": true
     }
   }
 }

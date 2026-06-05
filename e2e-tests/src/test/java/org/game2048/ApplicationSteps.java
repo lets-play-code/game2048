@@ -32,7 +32,6 @@ public class ApplicationSteps {
 
     @Before(order = 0)
     public void startApplication() {
-//        appRuntime.start();
         restfulStep.setBaseUrl("http://localhost:5000");
     }
 
