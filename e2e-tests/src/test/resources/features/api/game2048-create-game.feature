@@ -49,7 +49,7 @@
   场景: POST /api/games 在 cucumber 测试中使用场景指定的 id 创建游戏
     假如存在"下一个新游戏标识":
       """
-      gameId: ui-created-game
+      id: ui-created-game
       """
     当POST "/api/games":
       """

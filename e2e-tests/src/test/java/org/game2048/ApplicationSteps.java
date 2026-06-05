@@ -1,14 +1,14 @@
 package org.game2048;
 
-import org.testcharm.cucumber.restful.RestfulStep;
-import org.testcharm.dal.Assertions;
-import org.testcharm.jfactory.JFactory;
 import io.cucumber.java.Before;
 import io.cucumber.spring.CucumberContextConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootContextLoader;
 import org.springframework.test.context.ContextConfiguration;
+import org.testcharm.cucumber.restful.RestfulStep;
+import org.testcharm.dal.Assertions;
+import org.testcharm.jfactory.JFactory;
 
 @ContextConfiguration(classes = {CucumberConfiguration.class}, loader = SpringBootContextLoader.class)
 @CucumberContextConfiguration
@@ -32,8 +32,8 @@ public class ApplicationSteps {
 
     @Before(order = 0)
     public void startApplication() {
-        appRuntime.start();
-        restfulStep.setBaseUrl(appRuntime.getBaseUrl());
+//        appRuntime.start();
+        restfulStep.setBaseUrl("http://localhost:5000");
     }
 
     @Before(order = 1)

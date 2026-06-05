@@ -1,6 +1,7 @@
 package org.game2048;
 
 import org.game2048.entity.NextGameIdSeed;
+import org.testcharm.cucumber.restful.RestfulStep;
 import org.testcharm.jfactory.DataRepository;
 
 import java.io.ByteArrayOutputStream;
@@ -16,10 +17,12 @@ import java.util.List;
 
 public class NextGameIdSeedRepository implements DataRepository {
     private final Game2048AppRuntime appRuntime;
+    private final RestfulStep restfulStep;
     private final List<NextGameIdSeed> seeds = new ArrayList<>();
 
-    public NextGameIdSeedRepository(Game2048AppRuntime appRuntime) {
+    public NextGameIdSeedRepository(Game2048AppRuntime appRuntime, RestfulStep restfulStep) {
         this.appRuntime = appRuntime;
+        this.restfulStep = restfulStep;
     }
 
     @Override
@@ -37,7 +40,10 @@ public class NextGameIdSeedRepository implements DataRepository {
     public void save(Object object) {
         NextGameIdSeed seed = (NextGameIdSeed) object;
         seeds.add(seed);
-        post("/api/test/games/next-id", buildRequestBody(seed));
+//        post("/api/test/games/next-id", buildRequestBody(seed));
+        restfulStep.postInJson("/api/test/games/next-id", buildRequestBody(seed));
+        var code = restfulStep.response("code");
+        return;
     }
 
     private void post(String path, byte[] body) {
@@ -90,9 +96,8 @@ public class NextGameIdSeedRepository implements DataRepository {
         }
     }
 
-    private static byte[] buildRequestBody(NextGameIdSeed seed) {
-        String json = "{\"id\":\"" + escape(seed.getGameId()) + "\"}";
-        return json.getBytes(StandardCharsets.UTF_8);
+    private static String buildRequestBody(NextGameIdSeed seed) {
+        return "{\"id\":\"" + escape(seed.getId()) + "\"}";
     }
 
     private static String escape(String value) {

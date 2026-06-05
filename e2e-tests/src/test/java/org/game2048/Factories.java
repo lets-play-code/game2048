@@ -1,19 +1,20 @@
 package org.game2048;
 
-import org.testcharm.jfactory.CompositeDataRepository;
-import org.testcharm.jfactory.JFactory;
-import org.testcharm.jfactory.MemoryDataRepository;
-import org.testcharm.jfactory.repo.JPADataRepository;
 import lombok.SneakyThrows;
+import org.game2048.entity.ExistingGameSeed;
+import org.game2048.entity.LeaderboardEntryRow;
+import org.game2048.entity.NextGameIdSeed;
+import org.game2048.entity.SavedGameRow;
 import org.mockserver.client.MockServerClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.game2048.entity.ExistingGameSeed;
-import org.game2048.entity.LeaderboardEntryRow;
-import org.game2048.entity.NextGameIdSeed;
-import org.game2048.entity.SavedGameRow;
+import org.testcharm.cucumber.restful.RestfulStep;
+import org.testcharm.jfactory.CompositeDataRepository;
+import org.testcharm.jfactory.JFactory;
+import org.testcharm.jfactory.MemoryDataRepository;
+import org.testcharm.jfactory.repo.JPADataRepository;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -34,6 +35,7 @@ public class Factories {
             @Value("${testcharm.game2048.forced-tile-value:}") String forcedTileValue,
             @Value("${mock-server.endpoint}") String mockServerEndpoint) {
         URI endpoint = URI.create(mockServerEndpoint);
+        var restfulStep = new RestfulStep();
         return new Game2048AppRuntime(
                 dotnetCommand,
                 baseUrl,
@@ -44,7 +46,8 @@ public class Factories {
                 coverageRecorderDirectory,
                 coverageReportPath,
                 forcedTileValue,
-                endpoint.resolve("/api/wall").toString());
+                endpoint.resolve("/api/wall").toString(),
+                restfulStep);
     }
 
     @Bean
@@ -59,10 +62,12 @@ public class Factories {
 
     @Bean
     public JFactory factorySet(JPADataRepository jpaDataRepository, Game2048AppRuntime game2048AppRuntime) {
+        var restfulStep = new RestfulStep();
+        restfulStep.setBaseUrl(game2048AppRuntime.getBaseUrl());
         return new EntityFactory(
                 new CompositeDataRepository(new MemoryDataRepository())
-                        .registerByType(ExistingGameSeed.class, new ExistingGameSeedRepository(game2048AppRuntime))
-                        .registerByType(NextGameIdSeed.class, new NextGameIdSeedRepository(game2048AppRuntime))
+                        .registerByType(ExistingGameSeed.class, new ExistingGameSeedRepository(game2048AppRuntime, restfulStep))
+                        .registerByType(NextGameIdSeed.class, new NextGameIdSeedRepository(game2048AppRuntime, restfulStep))
                         .registerByType(LeaderboardEntryRow.class, jpaDataRepository)
                         .registerByType(SavedGameRow.class, jpaDataRepository)
         );

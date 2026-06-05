@@ -1,5 +1,7 @@
 package org.game2048;
 
+import org.testcharm.cucumber.restful.RestfulStep;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -28,6 +30,7 @@ public class Game2048AppRuntime {
     private final String jdbcUrl;
     private final String databaseUser;
     private final String databasePassword;
+    private final RestfulStep restfulStep;
     private final Path coverageRecorderDirectory;
     private final Path coverageReportPath;
     private final String forcedGeneratedTileValue;
@@ -47,9 +50,12 @@ public class Game2048AppRuntime {
             String coverageRecorderDirectory,
             String coverageReportPath,
             String forcedGeneratedTileValue,
-            String leaderboardWallUrl) {
+            String leaderboardWallUrl, RestfulStep restfulStep) {
         this.dotnetCommand = dotnetCommand;
         this.configuredBaseUrl = configuredBaseUrl;
+        this.baseUrl = configuredBaseUrl;
+        this.restfulStep = restfulStep;
+        this.restfulStep.setBaseUrl(baseUrl);
         this.connectionString = connectionString;
         this.jdbcUrl = jdbcUrl;
         this.databaseUser = databaseUser;
@@ -160,7 +166,7 @@ public class Game2048AppRuntime {
             throw new IllegalArgumentException("Generated tile value is required.");
         }
 
-        postJson("/api/test/generated-tile-value", "{\"value\":\"" + value + "\"}");
+        restfulStep.postInJson("/api/test/generated-tile-value", "{\"value\":\"" + value + "\"}");
     }
 
     public void clearData() {

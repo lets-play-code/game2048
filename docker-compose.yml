@@ -16,9 +16,19 @@ services:
       interval: 5s
       timeout: 3s
       retries: 20
+    tmpfs:
+      - /var/lib/mysql
     volumes:
-      - mysql8-data:/var/lib/mysql
       - ./docker/mysql/init:/docker-entrypoint-initdb.d:ro
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      UPLOAD_LIMIT: 300M
+    links:
+      - mysql8:db
+    ports:
+      - "50000:80"
 
   mockserver:
     image: mockserver/mockserver:5.13.2
@@ -55,6 +65,3 @@ services:
       default:
         aliases:
           - web-driver.tool.net
-
-volumes:
-  mysql8-data:

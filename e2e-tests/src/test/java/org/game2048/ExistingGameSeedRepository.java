@@ -1,7 +1,8 @@
 package org.game2048;
 
-import org.testcharm.jfactory.DataRepository;
 import org.game2048.entity.ExistingGameSeed;
+import org.testcharm.cucumber.restful.RestfulStep;
+import org.testcharm.jfactory.DataRepository;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -16,10 +17,12 @@ import java.util.List;
 
 public class ExistingGameSeedRepository implements DataRepository {
     private final Game2048AppRuntime appRuntime;
+    private final RestfulStep restfulStep;
     private final List<ExistingGameSeed> seeds = new ArrayList<>();
 
-    public ExistingGameSeedRepository(Game2048AppRuntime appRuntime) {
+    public ExistingGameSeedRepository(Game2048AppRuntime appRuntime, RestfulStep restfulStep) {
         this.appRuntime = appRuntime;
+        this.restfulStep = restfulStep;
     }
 
     @Override
@@ -32,7 +35,7 @@ public class ExistingGameSeedRepository implements DataRepository {
     public void clear() {
         seeds.clear();
         if (appRuntime.isRunning()) {
-            post("/api/test/games/clear-cache", null);
+            restfulStep.postObjectInJson("/api/test/games/clear-cache", null);
         }
     }
 
@@ -40,7 +43,7 @@ public class ExistingGameSeedRepository implements DataRepository {
     public void save(Object object) {
         ExistingGameSeed seed = (ExistingGameSeed) object;
         seeds.add(seed);
-        post("/api/test/games/" + seed.getGameId(), buildRequestBody(seed));
+        restfulStep.postInJson("/api/test/games/" + seed.getGameId(), buildRequestBody(seed));
     }
 
     private void post(String path, byte[] body) {
@@ -96,8 +99,8 @@ public class ExistingGameSeedRepository implements DataRepository {
         }
     }
 
-    private static byte[] buildRequestBody(ExistingGameSeed seed) {
-        String json = "{"
+    private static String buildRequestBody(ExistingGameSeed seed) {
+        return "{"
                 + "\"boardJson\":\"" + escape(seed.getBoardJson()) + "\","
                 + "\"score\":" + seed.getScore() + ","
                 + "\"win\":" + seed.isWin() + ","
@@ -105,7 +108,6 @@ public class ExistingGameSeedRepository implements DataRepository {
                 + "\"scoreRecorded\":" + seed.isScoreRecorded() + ","
                 + "\"leakedShouldAddTile\":" + seed.isLeakedShouldAddTile()
                 + "}";
-        return json.getBytes(StandardCharsets.UTF_8);
     }
 
     private static String escape(String value) {

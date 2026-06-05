@@ -1,14 +1,10 @@
 package org.game2048.entity;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class NextGameIdSeed {
-    private String gameId;
-
-    public String getGameId() {
-        return gameId;
-    }
-
-    public NextGameIdSeed setGameId(String gameId) {
-        this.gameId = gameId;
-        return this;
-    }
+    private String id;
 }

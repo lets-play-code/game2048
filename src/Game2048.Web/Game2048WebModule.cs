@@ -10,16 +10,27 @@ using Volo.Abp;
 using Volo.Abp.AspNetCore.Mvc;
 using Volo.Abp.Autofac;
 using Volo.Abp.Modularity;
+using Volo.Abp.Studio.Client.AspNetCore;
+using Volo.Abp.Auditing;
 
 namespace Game2048.Web;
 
 [DependsOn(typeof(AbpAspNetCoreMvcModule))]
 [DependsOn(typeof(AbpAutofacModule))]
+[DependsOn(typeof(AbpStudioClientAspNetCoreModule))]
 public class Game2048WebModule : AbpModule
 {
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
         IConfiguration configuration = context.Services.GetConfiguration();
+
+        // 强制开启全量审计上报
+        Configure<AbpAuditingOptions>(options =>
+        {
+            options.IsEnabled = true; 
+            options.IsEnabledForGetRequests = true;     // 关键：强制记录 GET 请求
+            options.IsEnabledForAnonymousUsers = true;  // 关键：未登录的测试请求也强制记录
+        });
 
         Configure<MvcOptions>(options =>
         {
@@ -66,9 +77,12 @@ public class Game2048WebModule : AbpModule
             }
         });
 
+        app.UseCorrelationId();
         app.UseDefaultFiles();
         app.UseStaticFiles();
         app.UseRouting();
+        app.UseAbpStudioLink();
+        app.UseAuditing();
         app.UseConfiguredEndpoints();
 
         if (app is WebApplication webApplication)

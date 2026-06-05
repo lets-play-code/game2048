@@ -32,7 +32,7 @@
   场景: right 且棋盘已右对齐时保持棋盘不变并刷新 auto 存档
     假如存在"下一个新游戏标识":
       """
-      gameId: ui-created-game
+      id: ui-created-game
       """
     当用户应该:
       """
@@ -77,7 +77,7 @@
   场景: left 且棋盘已左对齐时保持棋盘不变并刷新 auto 存档
     假如存在"下一个新游戏标识":
       """
-      gameId: ui-left-game
+      id: ui-left-game
       """
     当用户应该:
       """
@@ -122,7 +122,7 @@
   场景: up 且棋盘已上对齐时保持棋盘不变并刷新 auto 存档
     假如存在"下一个新游戏标识":
       """
-      gameId: ui-up-game
+      id: ui-up-game
       """
     当用户应该:
       """
@@ -167,7 +167,7 @@
   场景: down 且棋盘已下对齐时保持棋盘不变并刷新 auto 存档
     假如存在"下一个新游戏标识":
       """
-      gameId: ui-down-game
+      id: ui-down-game
       """
     当用户应该:
       """
@@ -212,7 +212,7 @@
   场景: save 会把当前局面保存到 slot1
     假如存在"下一个新游戏标识":
       """
-      gameId: ui-save-game
+      id: ui-save-game
       """
     当用户应该:
       """
@@ -258,7 +258,7 @@
   场景: load 会从 auto 存档恢复当前局面
     假如存在"下一个新游戏标识":
       """
-      gameId: ui-load-game
+      id: ui-load-game
       """
     当用户应该:
       """
